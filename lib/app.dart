@@ -5,6 +5,7 @@ import 'package:quickqr/features/login/ui/login_page.dart';
 import 'package:quickqr/src/features/counter/counter_page.dart';
 import 'package:quickqr/src/features/counter/counter_view_model.dart';
 import 'package:quickqr/src/features/counter_bloc/bloc/counter_bloc.dart';
+import 'package:quickqr/src/features/home/home_page.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
       create: (_) => CounterBloc(),
       child: const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: LoginPage(),
+        home: HomePage(),
       ),
     );
   }
