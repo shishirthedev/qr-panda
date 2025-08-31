@@ -1,0 +1,65 @@
+name: quickqr
+description: A new Flutter project.
+publish_to: 'none' # Private package
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.5 <4.0.0'
+
+# ----------------------------------------
+# Runtime dependencies
+# Packages required for your app to run
+# ----------------------------------------
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.0
+  http: ^1.5.0
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.7
+  dio: ^5.8.0
+  pretty_dio_logger: ^1.4.0
+  dio_cache_interceptor: ^4.0.3
+  retry: ^3.1.2
+  qr_flutter: ^4.0.0
+  shared_preferences: ^2.3.0
+  cached_network_image: ^3.3.1
+  flutter_svg: ^2.2.0
+  sqflite: ^2.3.2
+  path: ^1.8.3
+  get_it: ^8.2.0
+  injectable: ^2.3.5
+  json_serializable: ^6.8.0
+
+# ----------------------------------------
+# Development dependencies
+# Only needed for testing, linting, code generation
+# ----------------------------------------
+dev_dependencies:
+  # Flutter testing framework
+  flutter_test:
+    sdk: flutter
+  # Recommended lints
+  flutter_lints: ^6.0.0
+
+  # Code generation / mocking (uncomment when needed)
+  # build_runner: ^2.4.0
+  # mockito: ^5.5.0
+
+# ----------------------------------------
+# Flutter specific settings
+# ----------------------------------------
+flutter:
+  uses-material-design: true
+
+  # Add assets here
+  # assets:
+  #   - assets/images/
+
+  # Add fonts here
+  # fonts:
+  #   - family: MyFont
+  #     fonts:
+  #       - asset: assets/fonts/MyFont-Regular.ttf
