@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../qr_scanner/qr_scanner.dart';
-import '../qr_scanner/demo/qr_demo_page.dart';
+import '../qr_generator/qr_generator.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -40,12 +40,7 @@ class HomePage extends StatelessWidget {
               icon: Icons.qr_code,
               title: 'QR Code Generator',
               subtitle: 'Create QR codes for URLs, text, contacts, and WiFi',
-              onTap: () {
-                // TODO: Implement QR generator
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('QR Generator coming soon!')),
-                );
-              },
+              onTap: () => _navigateToQRGenerator(context),
             ),
             const SizedBox(height: 16),
             _buildFeatureCard(
@@ -60,14 +55,7 @@ class HomePage extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: 16),
-            _buildFeatureCard(
-              context,
-              icon: Icons.qr_code_2,
-              title: 'QR Demo',
-              subtitle: 'Test QR codes for scanner functionality',
-              onTap: () => _navigateToQRDemo(context),
-            ),
+
           ],
         ),
       ),
@@ -149,11 +137,11 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  void _navigateToQRDemo(BuildContext context) {
+  void _navigateToQRGenerator(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const QRDemoPage(),
+        builder: (context) => const QRGeneratorScreen(),
       ),
     );
   }
