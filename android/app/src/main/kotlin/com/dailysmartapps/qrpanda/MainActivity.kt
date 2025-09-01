@@ -1,4 +1,4 @@
-package com.example.quickqr
+package com.dailysmartapps.qrpanda
 
 import io.flutter.embedding.android.FlutterActivity
 

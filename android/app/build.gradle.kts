@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.quickqr"
+    namespace = "com.dailysmartapps.qrpanda"
     compileSdk = 36
 
     compileOptions {
@@ -19,9 +19,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.quickqr"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        applicationId = "com.dailysmartapps.qrpanda"
+        minSdk = 24
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

@@ -13,7 +13,7 @@ class HomePage extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          'QuickQR',
+          'QR Panda',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -67,7 +67,7 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Welcome to QuickQR',
+                    'Welcome to QR Panda',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
