@@ -11,18 +11,11 @@ class QRScannerOverlay extends StatelessWidget {
         Container(
           color: Colors.black.withValues(alpha: 0.5),
         ),
-        // Center cutout
+        // Center cutout with corner indicators only
         Center(
           child: Container(
             width: MediaQuery.of(context).size.width * 0.8,
             height: MediaQuery.of(context).size.width * 0.8,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: const Color(0xFF3B82F6),
-                width: 3,
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
             child: Stack(
               children: [
                 // Corner indicators
