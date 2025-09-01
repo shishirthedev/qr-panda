@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:quickqr/constants/strings.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 import '../../models/qr_history_item.dart';
@@ -96,15 +96,15 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   String _getScanTitle(String content) {
     if (content.startsWith('http')) {
-      return 'URL QR Code';
+      return AppStrings.urlQRCode;
     } else if (content.startsWith('tel:')) {
-      return 'Phone QR Code';
+      return AppStrings.phoneQRCode;
     } else if (content.startsWith('WIFI:')) {
-      return 'WiFi QR Code';
+      return AppStrings.wifiQRCode;
     } else if (content.startsWith('BEGIN:VCARD')) {
-      return 'Contact QR Code';
+      return AppStrings.contactQRCode;
     } else {
-      return 'Text QR Code';
+      return AppStrings.textQRCode;
     }
   }
 
@@ -117,18 +117,18 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       final parts = content.split(';');
       for (final part in parts) {
         if (part.startsWith('S:')) {
-          return 'WiFi: ${part.substring(2)}';
+          return '${AppStrings.wifiPrefix}${part.substring(2)}';
         }
       }
-      return 'WiFi Network';
+      return AppStrings.wifiNetwork;
     } else if (content.startsWith('BEGIN:VCARD')) {
       final lines = content.split('\n');
       for (final line in lines) {
         if (line.startsWith('FN:')) {
-          return 'Contact: ${line.substring(3)}';
+          return '${AppStrings.contactPrefix}${line.substring(3)}';
         }
       }
-      return 'Contact Information';
+      return AppStrings.contactInformation;
     } else {
       return content.length > 50 ? '${content.substring(0, 50)}...' : content;
     }
@@ -209,7 +209,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             child: IconButton(
               icon: const Icon(Icons.photo_library, color: Color(0xFF3B82F6)),
               onPressed: _scanFromGallery,
-              tooltip: 'Scan from Gallery',
+              tooltip: AppStrings.scanFromGallery,
             ),
           ),
         ],
@@ -265,7 +265,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Camera Permission Required',
+              AppStrings.cameraPermissionRequired,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -275,7 +275,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             ),
             const SizedBox(height: 12),
             const Text(
-              'This app needs camera access to scan QR codes',
+              AppStrings.cameraPermissionDescription,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -305,7 +305,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   onTap: _requestCameraPermission,
                   child: const Center(
                     child: Text(
-                      'Grant Permission',
+                      AppStrings.grantPermission,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -348,7 +348,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       child: Column(
         children: [
           const Text(
-            'Point your camera at a QR code',
+            AppStrings.scanInstructions,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -357,7 +357,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Or tap the gallery icon to scan from an image',
+            AppStrings.galleryInstructions,
             style: TextStyle(
               fontSize: 13,
               color: Color(0xFF6B7280),

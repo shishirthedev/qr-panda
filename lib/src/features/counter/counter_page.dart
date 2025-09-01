@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quickqr/constants/strings.dart';
 import 'package:quickqr/src/features/counter/widgets/counter_button.dart';
 import 'counter_view_model.dart';
 import 'widgets/counter_display.dart';
@@ -27,7 +28,7 @@ class CounterPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Your Count',
+              AppStrings.yourCount,
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w600,

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "180307147134",
+    "project_id": "qr-panda-4b343",
+    "storage_bucket": "qr-panda-4b343.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:180307147134:android:8a3e1c2e6132d7e3cc1b2f",
+        "android_client_info": {
+          "package_name": "com.dailysmartapps.qrpanda"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnSC-swxv-5P3KPQphHalGXJjyz8CqTXw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

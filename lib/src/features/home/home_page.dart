@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../qr_scanner/qr_scanner.dart';
-import '../qr_generator/qr_generator.dart';
+import 'package:quickqr/constants/strings.dart';
+
 import '../history/history_screen.dart';
+import '../qr_generator/qr_generator.dart';
+import '../qr_scanner/qr_scanner.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -13,7 +15,7 @@ class HomePage extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          'QR Panda',
+          AppStrings.appName,
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -67,7 +69,7 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Welcome to QR Panda',
+                    AppStrings.welcomeTitle,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -77,7 +79,7 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Your all-in-one QR code solution',
+                    AppStrings.welcomeSubtitle,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,
@@ -92,7 +94,7 @@ class HomePage extends StatelessWidget {
             
             // Features Section
             const Text(
-              'Features',
+              AppStrings.featuresTitle,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -104,8 +106,8 @@ class HomePage extends StatelessWidget {
             _buildFeatureCard(
               context,
               icon: Icons.qr_code_scanner,
-              title: 'QR Code Scanner',
-              subtitle: 'Scan QR codes with your camera or from gallery images',
+              title: AppStrings.scannerTitle,
+              subtitle: AppStrings.scannerSubtitle,
               color: const Color(0xFF10B981),
               onTap: () => _navigateToQRScanner(context),
             ),
@@ -113,8 +115,8 @@ class HomePage extends StatelessWidget {
             _buildFeatureCard(
               context,
               icon: Icons.qr_code,
-              title: 'QR Code Generator',
-              subtitle: 'Create QR codes for URLs, text, contacts, and WiFi',
+              title: AppStrings.generatorTitle,
+              subtitle: AppStrings.generatorSubtitle,
               color: const Color(0xFF3B82F6),
               onTap: () => _navigateToQRGenerator(context),
             ),
@@ -122,8 +124,8 @@ class HomePage extends StatelessWidget {
             _buildFeatureCard(
               context,
               icon: Icons.history,
-              title: 'QR History',
-              subtitle: 'View your scanned and generated QR codes',
+              title: AppStrings.historyTitle,
+              subtitle: AppStrings.historySubtitle,
               color: const Color(0xFF8B5CF6),
               onTap: () => _navigateToHistory(context),
             ),
