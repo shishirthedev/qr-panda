@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:share_plus/share_plus.dart';
-import '../../models/qr_history_item.dart';
-import '../../services/qr_history_service.dart';
 import 'models/qr_generator_data.dart';
 import 'widgets/qr_type_selector.dart';
-import 'widgets/qr_customization_panel.dart';
+import 'widgets/qr_result_screen.dart';
 
 class QRGeneratorScreen extends StatefulWidget {
   final QRGeneratorData? initialData;
@@ -26,8 +22,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   
-  final _qrKey = GlobalKey();
-  final QRHistoryService _historyService = QRHistoryService();
+
   
   QRGeneratorType _selectedType = QRGeneratorType.text;
   QRGeneratorData _qrData = QRGeneratorData();
@@ -75,34 +70,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          if (_qrData.qrContent.isNotEmpty) ...[
-            Container(
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.save, color: Color(0xFF10B981)),
-                onPressed: _saveQRCode,
-                tooltip: 'Save QR Code',
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(right: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.share, color: Color(0xFF3B82F6)),
-                onPressed: _shareQRCode,
-                tooltip: 'Share QR Code',
-              ),
-            ),
-          ],
-        ],
+        actions: [],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -119,14 +87,6 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             
             // Generate Button
             _buildGenerateButton(),
-            const SizedBox(height: 24),
-            
-            // QR Code Display
-            if (_qrData.qrContent.isNotEmpty) _buildQRCodeDisplay(),
-            const SizedBox(height: 24),
-            
-            // Customization Panel (only show when QR is generated)
-            if (_qrData.qrContent.isNotEmpty) _buildCustomizationPanel(),
           ],
         ),
       ),
@@ -294,7 +254,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
           margin: const EdgeInsets.all(12),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFFF59E0B).withOpacity(0.1),
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(Icons.phone, color: Color(0xFFF59E0B)),
@@ -337,7 +297,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.wifi, color: Color(0xFF8B5CF6)),
@@ -375,7 +335,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.lock, color: Color(0xFF8B5CF6)),
@@ -532,16 +492,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     );
   }
 
-  Widget _buildCustomizationPanel() {
-    return QRCustomizationPanel(
-      qrData: _qrData,
-      onDataChanged: (data) {
-        setState(() {
-          _qrData = data;
-        });
-      },
-    );
-  }
+
 
   Widget _buildGenerateButton() {
     return Container(
@@ -567,7 +518,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: _isGenerating ? null : _generateQRCode,
+          onTap: _isGenerating ? null : _generateAndShowResult,
           child: Center(
             child: _isGenerating
                 ? const Row(
@@ -617,187 +568,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     );
   }
 
-  Widget _buildQRCodeDisplay() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.qr_code_2,
-                  color: Color(0xFF10B981),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'Generated QR Code',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F2937),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          RepaintBoundary(
-            key: _qrKey,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.grey[200]!,
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: QrImageView(
-                data: _qrData.qrContent,
-                version: QrVersions.auto,
-                size: _qrData.size,
-                backgroundColor: _qrData.backgroundColor,
-                dataModuleStyle: QrDataModuleStyle(
-                  dataModuleShape: QrDataModuleShape.square,
-                  color: _qrData.foregroundColor,
-                ),
-                eyeStyle: QrEyeStyle(
-                  eyeShape: QrEyeShape.square,
-                  color: _qrData.foregroundColor,
-                ),
-                embeddedImage: null,
-                embeddedImageStyle: _qrData.logoImage != null
-                    ? QrEmbeddedImageStyle(
-                        size: Size(_qrData.size * 0.2, _qrData.size * 0.2),
-                      )
-                    : null,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: _saveQRCode,
-                      child: const Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.save,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Save',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: _shareQRCode,
-                      child: const Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.share,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Share',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _clearForm() {
     _textController.clear();
@@ -812,7 +583,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     });
   }
 
-  void _generateQRCode() {
+  void _generateAndShowResult() {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -844,6 +615,16 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         _qrData = _qrData.copyWith(qrContent: qrContent);
         _isGenerating = false;
       });
+
+      // Navigate to result screen
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => QRResultScreen(
+            qrData: _qrData,
+            qrContent: qrContent,
+          ),
+        ),
+      );
     } catch (e) {
       setState(() {
         _isGenerating = false;
@@ -885,92 +666,5 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     return vCard.toString();
   }
 
-  Future<void> _saveQRCode() async {
-    try {
-      // Save to history
-      final historyItem = QRHistoryItem.fromGenerated(
-        content: _qrData.qrContent,
-        qrData: _qrData,
-        title: _getQRCodeTitle(),
-        description: _getQRCodeDescription(),
-      );
-      
-      await _historyService.insertQRHistory(historyItem);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('QR Code saved to history!'),
-          backgroundColor: const Color(0xFF10B981),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving QR code: $e'),
-          backgroundColor: const Color(0xFFEF4444),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-    }
-  }
 
-  String _getQRCodeTitle() {
-    switch (_selectedType) {
-      case QRGeneratorType.text:
-        return 'Text QR Code';
-      case QRGeneratorType.url:
-        return 'URL QR Code';
-      case QRGeneratorType.phone:
-        return 'Phone QR Code';
-      case QRGeneratorType.wifi:
-        return 'WiFi QR Code';
-      case QRGeneratorType.contact:
-        return 'Contact QR Code';
-    }
-  }
-
-  String _getQRCodeDescription() {
-    switch (_selectedType) {
-      case QRGeneratorType.text:
-        return _textController.text.trim();
-      case QRGeneratorType.url:
-        return _urlController.text.trim();
-      case QRGeneratorType.phone:
-        return _phoneController.text.trim();
-      case QRGeneratorType.wifi:
-        return 'WiFi: ${_ssidController.text.trim()}';
-      case QRGeneratorType.contact:
-        return 'Contact: ${_nameController.text.trim()}';
-    }
-  }
-
-  Future<void> _shareQRCode() async {
-    try {
-      // Share the QR code content as text for now
-      await Share.share(
-        'QR Code Content: ${_qrData.qrContent}',
-        subject: 'QR Code',
-      );
-    } catch (e) {
-      if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error sharing QR code: $e'),
-            backgroundColor: const Color(0xFFEF4444),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    }
-  }
 }
