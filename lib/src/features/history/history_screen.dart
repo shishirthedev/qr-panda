@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../models/qr_history_item.dart';
 import '../../services/qr_history_service.dart';
@@ -119,8 +120,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
       );
     } else {
-      // For scanned items, just share the content
-      _shareHistoryItem(item);
+      // For scanned items, copy to clipboard
+      Clipboard.setData(ClipboardData(text: item.content));
+      _showSuccessSnackBar('Content copied to clipboard');
     }
   }
 
