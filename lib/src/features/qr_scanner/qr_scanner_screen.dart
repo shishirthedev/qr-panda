@@ -183,14 +183,34 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('QR Scanner'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text(
+          'QR Scanner',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1F2937),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.photo_library),
-            onPressed: _scanFromGallery,
-            tooltip: 'Scan from Gallery',
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.photo_library, color: Color(0xFF3B82F6)),
+              onPressed: _scanFromGallery,
+              tooltip: 'Scan from Gallery',
+            ),
           ),
         ],
       ),
@@ -226,31 +246,78 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   Widget _buildPermissionRequest() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.camera_alt_outlined,
-            size: 80,
-            color: Colors.grey,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Camera Permission Required',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'This app needs camera access to scan QR codes',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _requestCameraPermission,
-            child: const Text('Grant Permission'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.camera_alt_outlined,
+                size: 80,
+                color: Color(0xFF3B82F6),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Camera Permission Required',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1F2937),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'This app needs camera access to scan QR codes',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF6B7280),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3B82F6),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: _requestCameraPermission,
+                  child: const Center(
+                    child: Text(
+                      'Grant Permission',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -265,17 +332,64 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   Widget _buildScanInstructions() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.info_outline,
+                  color: Color(0xFF10B981),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Scanning Tips',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           const Text(
             'Point your camera at a QR code',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF374151),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           const Text(
             'Or tap the gallery icon to scan from an image',
-            style: TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF6B7280),
+            ),
             textAlign: TextAlign.center,
           ),
         ],

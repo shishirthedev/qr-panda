@@ -9,7 +9,7 @@ class QRScannerOverlay extends StatelessWidget {
       children: [
         // Semi-transparent overlay
         Container(
-          color: Colors.black.withOpacity(0.5),
+          color: Colors.black.withValues(alpha: 0.5),
         ),
         // Center cutout
         Center(
@@ -18,7 +18,7 @@ class QRScannerOverlay extends StatelessWidget {
             height: MediaQuery.of(context).size.width * 0.8,
             decoration: BoxDecoration(
               border: Border.all(
-                color: Theme.of(context).primaryColor,
+                color: const Color(0xFF3B82F6),
                 width: 3,
               ),
               borderRadius: BorderRadius.circular(20),
@@ -68,7 +68,7 @@ class QRScannerOverlay extends StatelessWidget {
                   Shadow(
                     offset: const Offset(1, 1),
                     blurRadius: 3,
-                    color: Colors.black.withOpacity(0.8),
+                    color: Colors.black.withValues(alpha: 0.8),
                   ),
                 ],
               ),
@@ -80,7 +80,7 @@ class QRScannerOverlay extends StatelessWidget {
   }
 
   Widget _buildCornerIndicator(BuildContext context, bool isTop, bool isLeft) {
-    final color = Theme.of(context).primaryColor;
+    const color = Color(0xFF3B82F6);
     const size = 30.0;
     const thickness = 3.0;
 
