@@ -33,7 +33,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     super.initState();
     if (widget.initialData != null) {
       _qrData = widget.initialData!;
-      _qrData = _qrData.copyWith(qrContent: ''); // Clear content for reuse
+      _prefillFormFromData();
     } else {
       _qrData = QRGeneratorData.defaultValues();
     }
@@ -583,6 +583,117 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     });
   }
 
+  void _prefillFormFromData() {
+    // First try to use original form data
+    if (_qrData.originalType != null) {
+      setState(() {
+        _selectedType = _qrData.originalType!;
+      });
+      
+      // Pre-fill form fields based on original type
+      switch (_qrData.originalType!) {
+        case QRGeneratorType.text:
+          if (_qrData.originalText != null) {
+            _textController.text = _qrData.originalText!;
+          }
+          break;
+        case QRGeneratorType.url:
+          if (_qrData.originalUrl != null) {
+            _urlController.text = _qrData.originalUrl!;
+          }
+          break;
+        case QRGeneratorType.phone:
+          if (_qrData.originalPhone != null) {
+            _phoneController.text = _qrData.originalPhone!;
+          }
+          break;
+        case QRGeneratorType.wifi:
+          if (_qrData.originalSsid != null) {
+            _ssidController.text = _qrData.originalSsid!;
+          }
+          if (_qrData.originalPassword != null) {
+            _passwordController.text = _qrData.originalPassword!;
+          }
+          break;
+        case QRGeneratorType.contact:
+          if (_qrData.originalName != null) {
+            _nameController.text = _qrData.originalName!;
+          }
+          if (_qrData.originalPhone != null) {
+            _phoneController.text = _qrData.originalPhone!;
+          }
+          if (_qrData.originalEmail != null) {
+            _emailController.text = _qrData.originalEmail!;
+          }
+          break;
+      }
+    } else {
+      // Fallback: Try to parse QR content to determine type and extract data
+      _parseQRContentToForm(_qrData.qrContent);
+    }
+  }
+
+  void _parseQRContentToForm(String qrContent) {
+    if (qrContent.isEmpty) return;
+
+    // Try to determine QR type and extract data
+    if (qrContent.startsWith('tel:')) {
+      // Phone number
+      setState(() {
+        _selectedType = QRGeneratorType.phone;
+      });
+      _phoneController.text = qrContent.substring(4);
+    } else if (qrContent.startsWith('WIFI:')) {
+      // WiFi
+      setState(() {
+        _selectedType = QRGeneratorType.wifi;
+      });
+      _parseWifiContent(qrContent);
+    } else if (qrContent.startsWith('BEGIN:VCARD')) {
+      // Contact
+      setState(() {
+        _selectedType = QRGeneratorType.contact;
+      });
+      _parseContactContent(qrContent);
+    } else if (qrContent.startsWith('http://') || qrContent.startsWith('https://')) {
+      // URL
+      setState(() {
+        _selectedType = QRGeneratorType.url;
+      });
+      _urlController.text = qrContent;
+    } else {
+      // Text
+      setState(() {
+        _selectedType = QRGeneratorType.text;
+      });
+      _textController.text = qrContent;
+    }
+  }
+
+  void _parseWifiContent(String wifiContent) {
+    final parts = wifiContent.split(';');
+    for (final part in parts) {
+      if (part.startsWith('S:')) {
+        _ssidController.text = part.substring(2);
+      } else if (part.startsWith('P:')) {
+        _passwordController.text = part.substring(2);
+      }
+    }
+  }
+
+  void _parseContactContent(String contactContent) {
+    final lines = contactContent.split('\n');
+    for (final line in lines) {
+      if (line.startsWith('FN:')) {
+        _nameController.text = line.substring(3);
+      } else if (line.startsWith('TEL:')) {
+        _phoneController.text = line.substring(4);
+      } else if (line.startsWith('EMAIL:')) {
+        _emailController.text = line.substring(6);
+      }
+    }
+  }
+
   void _generateAndShowResult() {
     if (!_formKey.currentState!.validate()) return;
 
@@ -611,8 +722,21 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
           break;
       }
 
+      // Store original form data for reuse
+      QRGeneratorData qrDataWithOriginal = _qrData.copyWith(
+        qrContent: qrContent,
+        originalType: _selectedType,
+        originalText: _selectedType == QRGeneratorType.text ? _textController.text.trim() : null,
+        originalUrl: _selectedType == QRGeneratorType.url ? _urlController.text.trim() : null,
+        originalPhone: _selectedType == QRGeneratorType.phone ? _phoneController.text.trim() : null,
+        originalSsid: _selectedType == QRGeneratorType.wifi ? _ssidController.text.trim() : null,
+        originalPassword: _selectedType == QRGeneratorType.wifi ? _passwordController.text.trim() : null,
+        originalName: _selectedType == QRGeneratorType.contact ? _nameController.text.trim() : null,
+        originalEmail: _selectedType == QRGeneratorType.contact ? _emailController.text.trim() : null,
+      );
+
       setState(() {
-        _qrData = _qrData.copyWith(qrContent: qrContent);
+        _qrData = qrDataWithOriginal;
         _isGenerating = false;
       });
 

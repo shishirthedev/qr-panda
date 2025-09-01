@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../models/qr_history_item.dart';
 import '../../services/qr_history_service.dart';
 import '../qr_generator/qr_generator_screen.dart';
+import '../qr_generator/models/qr_generator_data.dart';
 import 'widgets/history_item_card.dart';
 import 'widgets/history_filter_sheet.dart';
 
@@ -112,11 +113,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   void _reuseHistoryItem(QRHistoryItem item) {
     if (item.type == QRHistoryType.generated && item.qrData != null) {
+      // Create QRGeneratorData with the original content and colors
+      final qrData = QRGeneratorData(
+        qrContent: item.content,
+        backgroundColor: item.qrData!.backgroundColor,
+        foregroundColor: item.qrData!.foregroundColor,
+        originalType: item.qrData!.originalType,
+        originalText: item.qrData!.originalText,
+        originalUrl: item.qrData!.originalUrl,
+        originalPhone: item.qrData!.originalPhone,
+        originalSsid: item.qrData!.originalSsid,
+        originalPassword: item.qrData!.originalPassword,
+        originalName: item.qrData!.originalName,
+        originalEmail: item.qrData!.originalEmail,
+      );
+      
       // Navigate to QR generator with the saved data
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => QRGeneratorScreen(initialData: item.qrData),
+          builder: (context) => QRGeneratorScreen(initialData: qrData),
         ),
       );
     } else {

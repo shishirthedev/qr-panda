@@ -148,9 +148,9 @@ class HistoryItemCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _buildActionButton(
-                        icon: item.type == QRHistoryType.generated
-                            ? Icons.edit
-                            : Icons.copy,
+                                                 icon: item.type == QRHistoryType.generated
+                             ? Icons.edit
+                             : Icons.copy,
                         label: item.type == QRHistoryType.generated ? 'Edit' : 'Copy',
                         color: const Color(0xFF10B981),
                         onTap: onReuse,
