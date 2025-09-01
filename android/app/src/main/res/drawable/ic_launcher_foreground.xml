@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Background circle -->
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M54,54m-48,0a48,48 0,1 1,96 0a48,48 0,1 1,-96 0" />
+    
+    <!-- QR Code squares -->
+    <!-- Top left corner squares -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,32h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M34,34h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,42h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M34,44h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,32h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M44,34h4v4h-4z" />
+    
+    <!-- Top right corner squares -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,32h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M70,34h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,42h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M70,44h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M78,32h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M80,34h4v4h-4z" />
+    
+    <!-- Bottom left corner squares -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,68h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M34,70h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,78h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M34,80h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,68h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M44,70h4v4h-4z" />
+    
+    <!-- Bottom right corner squares -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,68h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M70,70h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,78h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M70,80h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M78,68h8v8h-8z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M80,70h4v4h-4z" />
+    
+    <!-- Center QR code pattern -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,52h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M58,52h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,58h4v4h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M58,58h4v4h-4z" />
+    
+    <!-- Additional QR pattern elements -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,46h2v2h-2z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,46h2v2h-2z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,60h2v2h-2z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,60h2v2h-2z" />
+    
+    <!-- Scan line effect -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,54h48v2h-48z" />
+</vector>

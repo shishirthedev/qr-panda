@@ -223,100 +223,89 @@ class ScanResultDisplay extends StatelessWidget {
 
   Future<void> _openLink(BuildContext context, String url) async {
     try {
-      // Ensure URL has a scheme
-      String urlToLaunch = url;
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        urlToLaunch = 'https://$url';
+      // Clean and validate the URL
+      String urlToLaunch = url.trim();
+      
+      // Remove any whitespace and ensure proper formatting
+      if (urlToLaunch.isEmpty) {
+        throw Exception('Empty URL');
       }
       
+      // Ensure URL has a scheme
+      if (!urlToLaunch.startsWith('http://') && !urlToLaunch.startsWith('https://')) {
+        // Check if it looks like a domain
+        if (urlToLaunch.contains('.') && !urlToLaunch.contains(' ')) {
+          urlToLaunch = 'https://$urlToLaunch';
+        } else {
+          throw Exception('Invalid URL format');
+        }
+      }
+      
+      // Parse the URI
       final uri = Uri.parse(urlToLaunch);
       
-      // Show options dialog for opening the link
-      if (context.mounted) {
-        _showOpenLinkOptions(context, uri, url);
+      // Validate the URI
+      if (uri.host.isEmpty) {
+        throw Exception('Invalid URL: no host found');
       }
+      
+      // Directly open in external browser
+      await _launchUrl(context, uri, LaunchMode.externalApplication);
     } catch (e) {
-      // Show error message
+      // Show error message with copy option
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Invalid URL format: $e'),
             backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Copy URL',
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: url));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('URL copied to clipboard'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+            ),
           ),
         );
       }
     }
   }
 
-  void _showOpenLinkOptions(BuildContext context, Uri uri, String originalUrl) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Open Link'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Choose how to open:'),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Text(
-                  originalUrl,
-                  style: const TextStyle(fontFamily: 'monospace'),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-                          TextButton.icon(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await _launchUrl(context, uri, LaunchMode.externalApplication);
-                },
-                icon: const Icon(Icons.open_in_browser),
-                label: const Text('External Browser'),
-              ),
-              TextButton.icon(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await _launchUrl(context, uri, LaunchMode.inAppWebView);
-                },
-                icon: const Icon(Icons.tab),
-                label: const Text('In-App Tab'),
-              ),
-          ],
-        );
-      },
-    );
-  }
+
 
   Future<void> _launchUrl(BuildContext context, Uri uri, LaunchMode mode) async {
     try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: mode);
-      } else {
-        // Show error message
-        if (context.mounted) {
+      // Try to launch URL directly with external application mode
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      
+      if (!launched) {
+        // If launchUrl fails, try alternative approach
+        final urlString = uri.toString();
+        final alternativeUri = Uri.parse(urlString);
+        
+        final alternativeLaunched = await launchUrl(
+          alternativeUri,
+          mode: LaunchMode.externalApplication,
+        );
+        
+        if (!alternativeLaunched && context.mounted) {
+          // Show error message with copy option
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Could not open: ${uri.toString()}'),
+              content: Text('Could not open: $urlString'),
               backgroundColor: Colors.red,
               action: SnackBarAction(
                 label: 'Copy URL',
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: uri.toString()));
+                  Clipboard.setData(ClipboardData(text: urlString));
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('URL copied to clipboard'),
@@ -330,7 +319,7 @@ class ScanResultDisplay extends StatelessWidget {
         }
       }
     } catch (e) {
-      // Show error message
+      // Show error message with copy option
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
