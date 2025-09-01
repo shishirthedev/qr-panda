@@ -13,26 +13,55 @@ class QRTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'QR Code Type',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.category,
+                    color: Color(0xFF8B5CF6),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'QR Code Type',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Wrap(
               spacing: 12,
               runSpacing: 12,
-                          children: QRGeneratorType.values.map((type) {
-              return _buildTypeChip(context, type);
-            }).toList(),
+              children: QRGeneratorType.values.map((type) {
+                return _buildTypeChip(context, type);
+              }).toList(),
             ),
           ],
         ),
@@ -44,28 +73,63 @@ class QRTypeSelector extends StatelessWidget {
     final isSelected = selectedType == type;
     final typeInfo = _getTypeInfo(type);
 
-    return FilterChip(
-      selected: isSelected,
-      onSelected: (_) => onTypeChanged(type),
-      avatar: Icon(
-        typeInfo.icon,
-        color: isSelected ? Colors.white : typeInfo.color,
-        size: 20,
-      ),
-      label: Text(
-        typeInfo.label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : null,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+    return GestureDetector(
+      onTap: () => onTypeChanged(type),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+                     color: isSelected ? typeInfo.color : const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? typeInfo.color : Colors.grey[200]!,
+            width: isSelected ? 2 : 1,
+          ),
+                         boxShadow: isSelected
+                   ? [
+                       BoxShadow(
+                         color: typeInfo.color.withValues(alpha: 0.3),
+                         blurRadius: 12,
+                         offset: const Offset(0, 4),
+                       ),
+                     ]
+                   : [
+                       BoxShadow(
+                         color: Colors.black.withValues(alpha: 0.05),
+                         blurRadius: 8,
+                         offset: const Offset(0, 2),
+                       ),
+                     ],
         ),
-      ),
-      backgroundColor: Colors.grey[100],
-      selectedColor: typeInfo.color,
-      checkmarkColor: Colors.white,
-      elevation: isSelected ? 4 : 1,
-      pressElevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                                 color: isSelected
+                     ? Colors.white.withValues(alpha: 0.2)
+                     : typeInfo.color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                typeInfo.icon,
+                color: isSelected ? Colors.white : typeInfo.color,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              typeInfo.label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : const Color(0xFF374151),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -76,31 +140,31 @@ class QRTypeSelector extends StatelessWidget {
         return TypeInfo(
           label: 'Text',
           icon: Icons.text_fields,
-          color: Colors.blue,
+          color: const Color(0xFF3B82F6),
         );
       case QRGeneratorType.url:
         return TypeInfo(
           label: 'URL',
           icon: Icons.link,
-          color: Colors.green,
+          color: const Color(0xFF10B981),
         );
       case QRGeneratorType.phone:
         return TypeInfo(
           label: 'Phone',
           icon: Icons.phone,
-          color: Colors.orange,
+          color: const Color(0xFFF59E0B),
         );
       case QRGeneratorType.wifi:
         return TypeInfo(
           label: 'WiFi',
           icon: Icons.wifi,
-          color: Colors.purple,
+          color: const Color(0xFF8B5CF6),
         );
       case QRGeneratorType.contact:
         return TypeInfo(
           label: 'Contact',
           icon: Icons.person,
-          color: Colors.teal,
+          color: const Color(0xFF14B8A6),
         );
     }
   }

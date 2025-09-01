@@ -140,7 +140,7 @@ class ScanResultDisplay extends StatelessWidget {
     // Copy action
     actions.add(
       TextButton.icon(
-        onPressed: () => _copyToClipboard(result.content),
+        onPressed: () => _copyToClipboard(context, result.content),
         icon: const Icon(Icons.copy),
         label: const Text('Copy'),
       ),
@@ -160,7 +160,7 @@ class ScanResultDisplay extends StatelessWidget {
       case QRType.url:
         actions.add(
           TextButton.icon(
-            onPressed: () => _openLink(result.content),
+            onPressed: () => _openLink(context, result.content),
             icon: const Icon(Icons.open_in_new),
             label: const Text('Open Link'),
           ),
@@ -200,10 +200,16 @@ class ScanResultDisplay extends StatelessWidget {
     return actions;
   }
 
-  void _copyToClipboard(String text) {
+  void _copyToClipboard(BuildContext context, String text) {
     Clipboard.setData(ClipboardData(text: text));
-    // Note: You might want to show a snackbar here, but it requires a BuildContext
-    // Consider using a callback or different approach for user feedback
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Copied to clipboard'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   void _shareResult(QRScanResult result) {
@@ -215,12 +221,136 @@ class ScanResultDisplay extends StatelessWidget {
     Share.share(shareText, subject: 'QR Code Scan Result');
   }
 
-  Future<void> _openLink(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      // Handle error - you might want to show a snackbar or dialog
+  Future<void> _openLink(BuildContext context, String url) async {
+    try {
+      // Ensure URL has a scheme
+      String urlToLaunch = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        urlToLaunch = 'https://$url';
+      }
+      
+      final uri = Uri.parse(urlToLaunch);
+      
+      // Show options dialog for opening the link
+      if (context.mounted) {
+        _showOpenLinkOptions(context, uri, url);
+      }
+    } catch (e) {
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invalid URL format: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showOpenLinkOptions(BuildContext context, Uri uri, String originalUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Open Link'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Choose how to open:'),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Text(
+                  originalUrl,
+                  style: const TextStyle(fontFamily: 'monospace'),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+                          TextButton.icon(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await _launchUrl(context, uri, LaunchMode.externalApplication);
+                },
+                icon: const Icon(Icons.open_in_browser),
+                label: const Text('External Browser'),
+              ),
+              TextButton.icon(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await _launchUrl(context, uri, LaunchMode.inAppWebView);
+                },
+                icon: const Icon(Icons.tab),
+                label: const Text('In-App Tab'),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _launchUrl(BuildContext context, Uri uri, LaunchMode mode) async {
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: mode);
+      } else {
+        // Show error message
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open: ${uri.toString()}'),
+              backgroundColor: Colors.red,
+              action: SnackBarAction(
+                label: 'Copy URL',
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: uri.toString()));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('URL copied to clipboard'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening link: $e'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Copy URL',
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: uri.toString()));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('URL copied to clipboard'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
     }
   }
 
