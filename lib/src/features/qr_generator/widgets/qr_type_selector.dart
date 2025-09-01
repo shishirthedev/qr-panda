@@ -13,59 +13,12 @@ class QRTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.category,
-                    color: Color(0xFF8B5CF6),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'QR Code Type',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: QRGeneratorType.values.map((type) {
-                return _buildTypeChip(context, type);
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: QRGeneratorType.values.map((type) {
+        return _buildTypeChip(context, type);
+      }).toList(),
     );
   }
 
@@ -78,54 +31,45 @@ class QRTypeSelector extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-                     color: isSelected ? typeInfo.color : const Color(0xFFF9FAFB),
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? typeInfo.color : Colors.white,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? typeInfo.color : Colors.grey[200]!,
-            width: isSelected ? 2 : 1,
+            color: isSelected ? typeInfo.color : Colors.grey[300]!,
+            width: 1.5,
           ),
-                         boxShadow: isSelected
-                   ? [
-                       BoxShadow(
-                         color: typeInfo.color.withValues(alpha: 0.3),
-                         blurRadius: 12,
-                         offset: const Offset(0, 4),
-                       ),
-                     ]
-                   : [
-                       BoxShadow(
-                         color: Colors.black.withValues(alpha: 0.05),
-                         blurRadius: 8,
-                         offset: const Offset(0, 2),
-                       ),
-                     ],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: typeInfo.color.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                                 color: isSelected
-                     ? Colors.white.withValues(alpha: 0.2)
-                     : typeInfo.color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                typeInfo.icon,
-                color: isSelected ? Colors.white : typeInfo.color,
-                size: 20,
-              ),
+            Icon(
+              typeInfo.icon,
+              color: isSelected ? Colors.white : typeInfo.color,
+              size: 16,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 6),
             Text(
               typeInfo.label,
               style: TextStyle(
                 color: isSelected ? Colors.white : const Color(0xFF374151),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
           ],

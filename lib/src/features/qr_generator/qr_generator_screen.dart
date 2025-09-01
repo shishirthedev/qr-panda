@@ -40,7 +40,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       _qrData = widget.initialData!;
       _qrData = _qrData.copyWith(qrContent: ''); // Clear content for reuse
     } else {
-    _qrData = QRGeneratorData.defaultValues();
+      _qrData = QRGeneratorData.defaultValues();
     }
   }
 
@@ -62,17 +62,21 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          'QR Code Generator',
+          'QR Generator',
           style: TextStyle(
-            fontWeight: FontWeight.w600,
             fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1F2937),
           ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: [
-          if (_qrData.qrContent.isNotEmpty)
+          if (_qrData.qrContent.isNotEmpty) ...[
             Container(
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
@@ -81,11 +85,10 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.save, color: Color(0xFF10B981)),
-              onPressed: _saveQRCode,
-              tooltip: 'Save QR Code',
+                onPressed: _saveQRCode,
+                tooltip: 'Save QR Code',
               ),
             ),
-          if (_qrData.qrContent.isNotEmpty)
             Container(
               margin: const EdgeInsets.only(right: 16),
               decoration: BoxDecoration(
@@ -94,179 +97,86 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.share, color: Color(0xFF3B82F6)),
-              onPressed: _shareQRCode,
-              tooltip: 'Share QR Code',
+                onPressed: _shareQRCode,
+                tooltip: 'Share QR Code',
               ),
             ),
+          ],
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.all(24.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-                  // Header Section
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          const Color(0xFF667EEA),
-                          const Color(0xFF764BA2),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                                             boxShadow: [
-                         BoxShadow(
-                           color: const Color(0xFF667EEA).withValues(alpha: 0.3),
-                           blurRadius: 20,
-                           offset: const Offset(0, 10),
-                         ),
-                       ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                                                         Container(
-                               padding: const EdgeInsets.all(12),
-                               decoration: BoxDecoration(
-                                 color: Colors.white.withValues(alpha: 0.2),
-                                 borderRadius: BorderRadius.circular(12),
-                               ),
-                              child: const Icon(
-                                Icons.qr_code,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Create QR Code',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Generate custom QR codes for any purpose',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // QR Type Selector
+            // QR Type Selector
             _buildQRTypeSelector(),
             const SizedBox(height: 24),
-                  
-                  // Input Form
+            
+            // Input Form
             _buildInputForm(),
             const SizedBox(height: 24),
-                  
-                  // Customization Panel
-            _buildCustomizationPanel(),
-            const SizedBox(height: 24),
-                  
-                  // Generate Button
+            
+            // Generate Button
             _buildGenerateButton(),
             const SizedBox(height: 24),
-                  
-                  // QR Code Display
+            
+            // QR Code Display
             if (_qrData.qrContent.isNotEmpty) _buildQRCodeDisplay(),
+            const SizedBox(height: 24),
+            
+            // Customization Panel (only show when QR is generated)
+            if (_qrData.qrContent.isNotEmpty) _buildCustomizationPanel(),
           ],
         ),
-            ),
-          ),
-        ],
       ),
     );
   }
 
   Widget _buildQRTypeSelector() {
-    return QRTypeSelector(
-      selectedType: _selectedType,
-      onTypeChanged: (type) {
-        setState(() {
-          _selectedType = type;
-          _clearForm();
-        });
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'QR Code Type',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1F2937),
+          ),
+        ),
+        const SizedBox(height: 12),
+        QRTypeSelector(
+          selectedType: _selectedType,
+          onTypeChanged: (type) {
+            setState(() {
+              _selectedType = type;
+              _clearForm();
+            });
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildInputForm() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-      key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                                     Container(
-                     padding: const EdgeInsets.all(8),
-                     decoration: BoxDecoration(
-                       color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-                       borderRadius: BorderRadius.circular(8),
-                     ),
-                    child: const Icon(
-                      Icons.edit_note,
-                      color: Color(0xFF3B82F6),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                'Input Data',
-                    style: TextStyle(
-                      fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                      color: Color(0xFF1F2937),
-                ),
-              ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _buildTypeSpecificInputs(),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Input Data',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1F2937),
           ),
         ),
-      ),
+        const SizedBox(height: 12),
+        Form(
+          key: _formKey,
+          child: _buildTypeSpecificInputs(),
+        ),
+      ],
     );
   }
 
@@ -636,27 +546,27 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   Widget _buildGenerateButton() {
     return Container(
       width: double.infinity,
-      height: 56,
+      height: 52,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            const Color(0xFF667EEA),
-            const Color(0xFF764BA2),
+            Color(0xFF3B82F6),
+            Color(0xFF1D4ED8),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
-                 boxShadow: [
-           BoxShadow(
-             color: const Color(0xFF667EEA).withValues(alpha: 0.3),
-             blurRadius: 15,
-             offset: const Offset(0, 8),
-           ),
-         ],
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           onTap: _isGenerating ? null : _generateQRCode,
           child: Center(
             child: _isGenerating
@@ -664,19 +574,19 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
-              width: 20,
-              height: 20,
+                        width: 18,
+                        height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: 10),
                       Text(
                         'Generating...',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -688,14 +598,14 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                       Icon(
                         Icons.qr_code,
                         color: Colors.white,
-                        size: 24,
+                        size: 22,
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: 10),
                       Text(
                         'Generate QR Code',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -709,184 +619,182 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
 
   Widget _buildQRCodeDisplay() {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                                   Container(
-                     padding: const EdgeInsets.all(8),
-                     decoration: BoxDecoration(
-                       color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                       borderRadius: BorderRadius.circular(8),
-                     ),
-                  child: const Icon(
-                    Icons.qr_code_2,
-                    color: Color(0xFF10B981),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-              'Generated QR Code',
-                  style: TextStyle(
-                    fontSize: 18,
-                fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
-              ),
-            ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            RepaintBoundary(
-              key: _qrKey,
-              child: Container(
-                padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.grey[200]!,
-                    width: 1,
-                  ),
-                                     boxShadow: [
-                     BoxShadow(
-                       color: Colors.black.withValues(alpha: 0.05),
-                       blurRadius: 10,
-                       offset: const Offset(0, 2),
-                     ),
-                   ],
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: QrImageView(
-                  data: _qrData.qrContent,
-                  version: QrVersions.auto,
-                  size: _qrData.size,
-                  backgroundColor: _qrData.backgroundColor,
-                  dataModuleStyle: QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: _qrData.foregroundColor,
-                  ),
-                  eyeStyle: QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: _qrData.foregroundColor,
-                  ),
-                  embeddedImage: null, // Logo embedding temporarily disabled
-                  embeddedImageStyle: _qrData.logoImage != null
-                      ? QrEmbeddedImageStyle(
-                          size: Size(_qrData.size * 0.2, _qrData.size * 0.2),
-                        )
-                      : null,
+                child: const Icon(
+                  Icons.qr_code_2,
+                  color: Color(0xFF10B981),
+                  size: 20,
                 ),
               ),
+              const SizedBox(width: 12),
+              const Text(
+                'Generated QR Code',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          RepaintBoundary(
+            key: _qrKey,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.grey[200]!,
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: QrImageView(
+                data: _qrData.qrContent,
+                version: QrVersions.auto,
+                size: _qrData.size,
+                backgroundColor: _qrData.backgroundColor,
+                dataModuleStyle: QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: _qrData.foregroundColor,
+                ),
+                eyeStyle: QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: _qrData.foregroundColor,
+                ),
+                embeddedImage: null,
+                embeddedImageStyle: _qrData.logoImage != null
+                    ? QrEmbeddedImageStyle(
+                        size: Size(_qrData.size * 0.2, _qrData.size * 0.2),
+                      )
+                    : null,
+              ),
             ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
                       borderRadius: BorderRadius.circular(12),
-                                             boxShadow: [
-                         BoxShadow(
-                           color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                           blurRadius: 10,
-                           offset: const Offset(0, 4),
-                         ),
-                       ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: _saveQRCode,
-                        child: const Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.save,
+                      onTap: _saveQRCode,
+                      child: const Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.save,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Save',
+                              style: TextStyle(
                                 color: Colors.white,
-                                size: 20,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Save',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B82F6),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
                       borderRadius: BorderRadius.circular(12),
-                                             boxShadow: [
-                         BoxShadow(
-                           color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                           blurRadius: 10,
-                           offset: const Offset(0, 4),
-                         ),
-                       ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: _shareQRCode,
-                        child: const Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.share,
+                      onTap: _shareQRCode,
+                      child: const Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.share,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Share',
+                              style: TextStyle(
                                 color: Colors.white,
-                                size: 20,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Share',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
