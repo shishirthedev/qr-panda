@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../models/qr_generator_data.dart';
 
 class QRGeneratorDemoPage extends StatelessWidget {
   const QRGeneratorDemoPage({super.key});
@@ -53,25 +52,25 @@ class QRGeneratorDemoPage extends StatelessWidget {
                         ],
                       ),
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF667EEA).withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                                             boxShadow: [
+                         BoxShadow(
+                           color: const Color(0xFF667EEA).withValues(alpha: 0.3),
+                           blurRadius: 20,
+                           offset: const Offset(0, 10),
+                         ),
+                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                                                         Container(
+                               padding: const EdgeInsets.all(12),
+                               decoration: BoxDecoration(
+                                 color: Colors.white.withValues(alpha: 0.2),
+                                 borderRadius: BorderRadius.circular(12),
+                               ),
                               child: const Icon(
                                 Icons.qr_code_scanner,
                                 color: Colors.white,
@@ -174,13 +173,13 @@ END:VCARD''',
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF667EEA).withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                                 boxShadow: [
+           BoxShadow(
+             color: const Color(0xFF667EEA).withValues(alpha: 0.3),
+             blurRadius: 15,
+             offset: const Offset(0, 8),
+           ),
+         ],
                       ),
                       child: Material(
                         color: Colors.transparent,
@@ -234,13 +233,13 @@ END:VCARD''',
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
-          ),
-        ],
+                 boxShadow: [
+           BoxShadow(
+             color: Colors.black.withValues(alpha: 0.05),
+             blurRadius: 20,
+             offset: const Offset(0, 5),
+           ),
+         ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -300,28 +299,27 @@ END:VCARD''',
                     color: Colors.grey[200]!,
                     width: 1,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                                     boxShadow: [
+                     BoxShadow(
+                       color: Colors.black.withValues(alpha: 0.05),
+                       blurRadius: 10,
+                       offset: const Offset(0, 2),
+                     ),
+                   ],
                 ),
                 child: QrImageView(
                   data: qrData,
                   version: QrVersions.auto,
                   size: 180,
                   backgroundColor: Colors.white,
-                  foregroundColor: color,
-                  dataModuleStyle: QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: color,
-                  ),
-                  eyeStyle: QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: color,
-                  ),
+                                                        dataModuleStyle: QrDataModuleStyle(
+                     dataModuleShape: QrDataModuleShape.square,
+                     color: color,
+                   ),
+                   eyeStyle: QrEyeStyle(
+                     eyeShape: QrEyeShape.square,
+                     color: color,
+                   ),
                 ),
               ),
             ),

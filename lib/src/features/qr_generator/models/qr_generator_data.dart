@@ -59,6 +59,30 @@ class QRGeneratorData {
         other.wifiSecurityType == wifiSecurityType;
   }
 
+  // Create from Map (for database storage)
+  factory QRGeneratorData.fromMap(Map<String, dynamic> map) {
+    return QRGeneratorData(
+      qrContent: map['qrContent'] ?? '',
+      size: map['size']?.toDouble() ?? 300.0,
+      foregroundColor: Color(map['foregroundColor'] ?? Colors.black.value),
+      backgroundColor: Color(map['backgroundColor'] ?? Colors.white.value),
+      wifiSecurityType: map['wifiSecurityType'] ?? 'WPA',
+      // Note: logoImage cannot be serialized easily, so we'll skip it
+    );
+  }
+
+  // Convert to Map for database storage
+  Map<String, dynamic> toMap() {
+    return {
+      'qrContent': qrContent,
+      'size': size,
+      'foregroundColor': foregroundColor.value,
+      'backgroundColor': backgroundColor.value,
+      'wifiSecurityType': wifiSecurityType,
+      // Note: logoImage is not included as it cannot be easily serialized
+    };
+  }
+
   @override
   int get hashCode {
     return qrContent.hashCode ^

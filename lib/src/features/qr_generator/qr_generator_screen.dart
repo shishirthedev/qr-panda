@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../models/qr_history_item.dart';
+import '../../services/qr_history_service.dart';
 import 'models/qr_generator_data.dart';
 import 'widgets/qr_type_selector.dart';
 import 'widgets/qr_customization_panel.dart';
 
 class QRGeneratorScreen extends StatefulWidget {
-  const QRGeneratorScreen({super.key});
+  final QRGeneratorData? initialData;
+  
+  const QRGeneratorScreen({super.key, this.initialData});
 
   @override
   State<QRGeneratorScreen> createState() => _QRGeneratorScreenState();
@@ -23,6 +27,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   final _emailController = TextEditingController();
   
   final _qrKey = GlobalKey();
+  final QRHistoryService _historyService = QRHistoryService();
   
   QRGeneratorType _selectedType = QRGeneratorType.text;
   QRGeneratorData _qrData = QRGeneratorData();
@@ -31,7 +36,12 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   @override
   void initState() {
     super.initState();
-    _qrData = QRGeneratorData.defaultValues();
+    if (widget.initialData != null) {
+      _qrData = widget.initialData!;
+      _qrData = _qrData.copyWith(qrContent: ''); // Clear content for reuse
+    } else {
+      _qrData = QRGeneratorData.defaultValues();
+    }
   }
 
   @override
@@ -969,11 +979,19 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
 
   Future<void> _saveQRCode() async {
     try {
-      // For now, we'll just show a success message since we can't save to gallery
-      // without the problematic image_gallery_saver package
+      // Save to history
+      final historyItem = QRHistoryItem.fromGenerated(
+        content: _qrData.qrContent,
+        qrData: _qrData,
+        title: _getQRCodeTitle(),
+        description: _getQRCodeDescription(),
+      );
+      
+      await _historyService.insertQRHistory(historyItem);
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('QR Code ready! You can now share it.'),
+          content: const Text('QR Code saved to history!'),
           backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -984,7 +1002,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text('Error saving QR code: $e'),
           backgroundColor: const Color(0xFFEF4444),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -992,6 +1010,36 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
           ),
         ),
       );
+    }
+  }
+
+  String _getQRCodeTitle() {
+    switch (_selectedType) {
+      case QRGeneratorType.text:
+        return 'Text QR Code';
+      case QRGeneratorType.url:
+        return 'URL QR Code';
+      case QRGeneratorType.phone:
+        return 'Phone QR Code';
+      case QRGeneratorType.wifi:
+        return 'WiFi QR Code';
+      case QRGeneratorType.contact:
+        return 'Contact QR Code';
+    }
+  }
+
+  String _getQRCodeDescription() {
+    switch (_selectedType) {
+      case QRGeneratorType.text:
+        return _textController.text.trim();
+      case QRGeneratorType.url:
+        return _urlController.text.trim();
+      case QRGeneratorType.phone:
+        return _phoneController.text.trim();
+      case QRGeneratorType.wifi:
+        return 'WiFi: ${_ssidController.text.trim()}';
+      case QRGeneratorType.contact:
+        return 'Contact: ${_nameController.text.trim()}';
     }
   }
 

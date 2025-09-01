@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
+import '../../models/qr_history_item.dart';
+import '../../services/qr_history_service.dart';
 import 'qr_scanner_bloc.dart';
 import 'qr_scanner_state.dart';
 import 'qr_scanner_event.dart';
@@ -23,6 +25,7 @@ class QRScannerScreen extends StatefulWidget {
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
   MobileScannerController? controller;
+  final QRHistoryService _historyService = QRHistoryService();
   bool _isCameraPermissionGranted = false;
   bool _isScanning = false;
 
@@ -57,6 +60,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         final result = QRScanResult.fromScannedData(barcode.rawValue!);
         context.read<QRScannerBloc>().add(QRCodeScanned(result));
         
+        // Save to history
+        _saveToHistory(result.content);
+        
         // Stop scanning temporarily
         controller?.stop();
         
@@ -70,6 +76,61 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           }
         });
       }
+    }
+  }
+
+  Future<void> _saveToHistory(String content) async {
+    try {
+      final historyItem = QRHistoryItem.fromScanned(
+        content: content,
+        title: _getScanTitle(content),
+        description: _getScanDescription(content),
+      );
+      
+      await _historyService.insertQRHistory(historyItem);
+    } catch (e) {
+      // Silently fail - don't interrupt the scanning experience
+      debugPrint('Failed to save to history: $e');
+    }
+  }
+
+  String _getScanTitle(String content) {
+    if (content.startsWith('http')) {
+      return 'URL QR Code';
+    } else if (content.startsWith('tel:')) {
+      return 'Phone QR Code';
+    } else if (content.startsWith('WIFI:')) {
+      return 'WiFi QR Code';
+    } else if (content.startsWith('BEGIN:VCARD')) {
+      return 'Contact QR Code';
+    } else {
+      return 'Text QR Code';
+    }
+  }
+
+  String _getScanDescription(String content) {
+    if (content.startsWith('http')) {
+      return content;
+    } else if (content.startsWith('tel:')) {
+      return content.substring(4);
+    } else if (content.startsWith('WIFI:')) {
+      final parts = content.split(';');
+      for (final part in parts) {
+        if (part.startsWith('S:')) {
+          return 'WiFi: ${part.substring(2)}';
+        }
+      }
+      return 'WiFi Network';
+    } else if (content.startsWith('BEGIN:VCARD')) {
+      final lines = content.split('\n');
+      for (final line in lines) {
+        if (line.startsWith('FN:')) {
+          return 'Contact: ${line.substring(3)}';
+        }
+      }
+      return 'Contact Information';
+    } else {
+      return content.length > 50 ? '${content.substring(0, 50)}...' : content;
     }
   }
 
@@ -96,6 +157,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           
           if (result != null) {
             context.read<QRScannerBloc>().add(QRCodeScanned(result));
+            // Save to history
+            _saveToHistory(result.content);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('No QR code found in the selected image')),

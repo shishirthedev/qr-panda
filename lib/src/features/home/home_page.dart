@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../qr_scanner/qr_scanner.dart';
 import '../qr_generator/qr_generator.dart';
+import '../history/history_screen.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -46,14 +47,9 @@ class HomePage extends StatelessWidget {
             _buildFeatureCard(
               context,
               icon: Icons.history,
-              title: 'Scan History',
-              subtitle: 'View your previous QR code scans',
-              onTap: () {
-                // TODO: Implement scan history
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Scan History coming soon!')),
-                );
-              },
+              title: 'QR History',
+              subtitle: 'View your scanned and generated QR codes',
+              onTap: () => _navigateToHistory(context),
             ),
 
           ],
@@ -142,6 +138,15 @@ class HomePage extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) => const QRGeneratorScreen(),
+      ),
+    );
+  }
+
+  void _navigateToHistory(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HistoryScreen(),
       ),
     );
   }
