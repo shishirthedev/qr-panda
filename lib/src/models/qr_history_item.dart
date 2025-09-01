@@ -79,16 +79,26 @@ class QRHistoryItem {
 
   // Create from Map (from database)
   factory QRHistoryItem.fromMap(Map<String, dynamic> map) {
+    QRGeneratorData? qrData;
+    try {
+      if (map['qrData'] != null) {
+        qrData = QRGeneratorData.fromMap(map['qrData']);
+      }
+    } catch (e) {
+      // If there's an error parsing qrData, just set it to null
+      qrData = null;
+    }
+
     return QRHistoryItem(
-      id: map['id'],
-      content: map['content'],
-      type: QRHistoryType.values[map['type']],
-      timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp']),
+      id: map['id'] ?? '',
+      content: map['content'] ?? '',
+      type: QRHistoryType.values[map['type'] ?? 0],
+      timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp'] ?? 0),
       title: map['title'],
       description: map['description'],
       metadata: map['metadata'],
       qrImagePath: map['qrImagePath'],
-      qrData: map['qrData'] != null ? QRGeneratorData.fromMap(map['qrData']) : null,
+      qrData: qrData,
     );
   }
 

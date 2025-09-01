@@ -50,6 +50,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
+        _allHistoryItems = [];
+        _filteredHistoryItems = [];
       });
       _showErrorSnackBar('Failed to load history: $e');
     }

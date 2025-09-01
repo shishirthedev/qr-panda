@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:convert';
 import '../models/qr_history_item.dart';
 
 class QRHistoryService {
@@ -204,30 +205,13 @@ class QRHistoryService {
 
   // Helper method to convert Map to JSON string
   String _mapToJson(Map<String, dynamic> map) {
-    // Simple JSON conversion - in a real app, you might want to use jsonEncode
-    return map.toString();
+    return jsonEncode(map);
   }
 
   // Helper method to convert JSON string to Map
   Map<String, dynamic> _jsonToMap(String jsonString) {
-    // Simple JSON parsing - in a real app, you might want to use jsonDecode
-    // This is a simplified version for demonstration
     try {
-      // Remove the curly braces and split by comma
-      final content = jsonString.substring(1, jsonString.length - 1);
-      final pairs = content.split(', ');
-      final map = <String, dynamic>{};
-      
-      for (final pair in pairs) {
-        final colonIndex = pair.indexOf(':');
-        if (colonIndex != -1) {
-          final key = pair.substring(0, colonIndex).trim();
-          final value = pair.substring(colonIndex + 1).trim();
-          map[key] = value;
-        }
-      }
-      
-      return map;
+      return jsonDecode(jsonString) as Map<String, dynamic>;
     } catch (e) {
       return {};
     }
