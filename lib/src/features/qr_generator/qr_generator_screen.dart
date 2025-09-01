@@ -40,7 +40,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       _qrData = widget.initialData!;
       _qrData = _qrData.copyWith(qrContent: ''); // Clear content for reuse
     } else {
-      _qrData = QRGeneratorData.defaultValues();
+    _qrData = QRGeneratorData.defaultValues();
     }
   }
 
@@ -81,8 +81,8 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.save, color: Color(0xFF10B981)),
-                onPressed: _saveQRCode,
-                tooltip: 'Save QR Code',
+              onPressed: _saveQRCode,
+              tooltip: 'Save QR Code',
               ),
             ),
           if (_qrData.qrContent.isNotEmpty)
@@ -94,8 +94,8 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.share, color: Color(0xFF3B82F6)),
-                onPressed: _shareQRCode,
-                tooltip: 'Share QR Code',
+              onPressed: _shareQRCode,
+              tooltip: 'Share QR Code',
               ),
             ),
         ],
@@ -105,9 +105,9 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
                   // Header Section
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -178,25 +178,25 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                   const SizedBox(height: 24),
                   
                   // QR Type Selector
-                  _buildQRTypeSelector(),
-                  const SizedBox(height: 24),
+            _buildQRTypeSelector(),
+            const SizedBox(height: 24),
                   
                   // Input Form
-                  _buildInputForm(),
-                  const SizedBox(height: 24),
+            _buildInputForm(),
+            const SizedBox(height: 24),
                   
                   // Customization Panel
-                  _buildCustomizationPanel(),
-                  const SizedBox(height: 24),
+            _buildCustomizationPanel(),
+            const SizedBox(height: 24),
                   
                   // Generate Button
-                  _buildGenerateButton(),
-                  const SizedBox(height: 24),
+            _buildGenerateButton(),
+            const SizedBox(height: 24),
                   
                   // QR Code Display
-                  if (_qrData.qrContent.isNotEmpty) _buildQRCodeDisplay(),
-                ],
-              ),
+            if (_qrData.qrContent.isNotEmpty) _buildQRCodeDisplay(),
+          ],
+        ),
             ),
           ),
         ],
@@ -232,7 +232,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Form(
-          key: _formKey,
+      key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -252,13 +252,13 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                   ),
                   const SizedBox(width: 12),
                   const Text(
-                    'Input Data',
+                'Input Data',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                       color: Color(0xFF1F2937),
-                    ),
-                  ),
+                ),
+              ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -664,8 +664,8 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
-                        width: 20,
-                        height: 20,
+              width: 20,
+              height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
@@ -740,13 +740,13 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  'Generated QR Code',
+              'Generated QR Code',
                   style: TextStyle(
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.bold,
                     color: Color(0xFF1F2937),
-                  ),
-                ),
+              ),
+            ),
               ],
             ),
             const SizedBox(height: 20),
@@ -1052,7 +1052,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error sharing QR code: $e'),
             backgroundColor: const Color(0xFFEF4444),
