@@ -2,12 +2,8 @@
   "ads_enabled": true,
   "banner_ads_enabled": true,
   "interstitial_ads_enabled": true,
-
-  "interstitial_frequency": 3,
-  "banner_refresh_interval": 30,
-
+  "max_interstitials_per_day": 10,
   "use_test_ads": true,
-
   "admob": {
     "android": {
       "banner_ad_unit_id": "ca-app-pub-3940256099942544/6300978111",

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/app_theme.dart';
 import '../../../models/qr_history_item.dart';
+import '../../../services/ad_service.dart';
 import 'history_item_details_screen.dart';
 
 class HistoryItemCard extends StatelessWidget {
@@ -148,7 +149,7 @@ class HistoryItemCard extends StatelessWidget {
           onReuse: onReuse,
         ),
       ),
-    );
+    ).then((_) => AdService.instance.recordAction());
   }
 
   String _formatTimestamp(DateTime timestamp) {

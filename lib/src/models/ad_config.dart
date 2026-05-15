@@ -4,7 +4,7 @@ class AdConfig {
   final bool adsEnabled;
   final bool bannerAdsEnabled;
   final bool interstitialAdsEnabled;
-  final int interstitialFrequency;
+  final int maxInterstitialsPerDay;
   final bool useTestAds;
   final String bannerAdUnitId;
   final String interstitialAdUnitId;
@@ -19,7 +19,7 @@ class AdConfig {
     required this.adsEnabled,
     required this.bannerAdsEnabled,
     required this.interstitialAdsEnabled,
-    required this.interstitialFrequency,
+    required this.maxInterstitialsPerDay,
     required this.useTestAds,
     required this.bannerAdUnitId,
     required this.interstitialAdUnitId,
@@ -31,7 +31,7 @@ class AdConfig {
     final adsEnabled             = (json['ads_enabled'] as bool?) ?? false;
     final bannerAdsEnabled       = (json['banner_ads_enabled'] as bool?) ?? false;
     final interstitialAdsEnabled = (json['interstitial_ads_enabled'] as bool?) ?? false;
-    final interstitialFrequency  = (json['interstitial_frequency'] as int?) ?? 3;
+    final maxInterstitialsPerDay  = (json['max_interstitials_per_day'] as int?) ?? 10;
     final useTestAds             = (json['use_test_ads'] as bool?) ?? true;
 
     final admob       = json['admob'] as Map<String, dynamic>?;
@@ -53,7 +53,7 @@ class AdConfig {
       adsEnabled: adsEnabled,
       bannerAdsEnabled: bannerAdsEnabled,
       interstitialAdsEnabled: interstitialAdsEnabled,
-      interstitialFrequency: interstitialFrequency,
+      maxInterstitialsPerDay: maxInterstitialsPerDay,
       useTestAds: useTestAds,
       bannerAdUnitId: bannerAdUnitId,
       interstitialAdUnitId: interstitialAdUnitId,
@@ -64,7 +64,7 @@ class AdConfig {
     adsEnabled: false,
     bannerAdsEnabled: false,
     interstitialAdsEnabled: false,
-    interstitialFrequency: 3,
+    maxInterstitialsPerDay: 10,
     useTestAds: true,
     bannerAdUnitId: '',
     interstitialAdUnitId: '',

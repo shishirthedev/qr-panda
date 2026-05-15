@@ -342,6 +342,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
     try {
       final shareText = 'Check out this QR code!\n\nContent: ${_qrData.qrContent}';
       await Share.share(shareText, subject: 'QR Code from QR Panda');
+      AdService.instance.recordAction();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

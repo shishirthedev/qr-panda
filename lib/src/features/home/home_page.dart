@@ -63,27 +63,42 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _loadBanner() {
-    if (_isPremium) return;
+    debugPrint('[HomePage] _loadBanner called. isPremium=$_isPremium adsReady=${AdService.instance.adsReadyNotifier.value}');
+
+    if (_isPremium) {
+      debugPrint('[HomePage] Skipping banner — user is premium.');
+      return;
+    }
 
     final config = AdService.instance.config;
-    if (!config.bannerAdsEnabled || config.bannerAdUnitId.isEmpty) return;
+    debugPrint('[HomePage] bannerAdsEnabled=${config.bannerAdsEnabled} bannerAdUnitId=${config.bannerAdUnitId}');
+
+    if (!config.bannerAdsEnabled) {
+      debugPrint('[HomePage] Skipping banner — bannerAdsEnabled is false.');
+      return;
+    }
+    if (config.bannerAdUnitId.isEmpty) {
+      debugPrint('[HomePage] Skipping banner — bannerAdUnitId is empty.');
+      return;
+    }
+
+    debugPrint('[HomePage] Loading banner with unit: ${config.bannerAdUnitId}');
 
     final ad = BannerAd(
       adUnitId: config.bannerAdUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (_) {
-          if (mounted) setState(() {});
+        onAdLoaded: (loadedAd) {
+          debugPrint('[HomePage] Banner loaded successfully.');
+          if (mounted) setState(() => _bannerAd = loadedAd as BannerAd);
         },
         onAdFailedToLoad: (failedAd, error) {
-          debugPrint('[HomePage] Banner failed: ${error.message}');
+          debugPrint('[HomePage] Banner FAILED to load: code=${error.code} message=${error.message}');
           failedAd.dispose();
-          if (mounted) setState(() => _bannerAd = null);
         },
       ),
     );
-    _bannerAd = ad;
     ad.load();
   }
 

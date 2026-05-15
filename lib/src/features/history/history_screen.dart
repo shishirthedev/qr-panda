@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../core/app_theme.dart';
 import '../../models/qr_history_item.dart';
+import '../../services/ad_service.dart';
+import '../../services/premium_service.dart';
 import '../../services/qr_history_service.dart';
 import '../qr_generator/qr_generator_screen.dart';
 import '../qr_generator/models/qr_generator_data.dart';
@@ -26,14 +29,48 @@ class _HistoryScreenState extends State<HistoryScreen> {
   bool _isLoading = true;
   bool _isSearching = false;
 
+  BannerAd? _bannerAd;
+
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    if (AdService.instance.adsReadyNotifier.value) {
+      _loadBanner();
+    } else {
+      AdService.instance.adsReadyNotifier.addListener(_onAdsReady);
+    }
+  }
+
+  void _onAdsReady() {
+    AdService.instance.adsReadyNotifier.removeListener(_onAdsReady);
+    _loadBanner();
+  }
+
+  void _loadBanner() {
+    if (PremiumService.instance.isPremium) return;
+    final config = AdService.instance.config;
+    if (!config.bannerAdsEnabled || config.bannerAdUnitId.isEmpty) return;
+    BannerAd(
+      adUnitId: config.bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) setState(() => _bannerAd = ad as BannerAd);
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('[History] Banner failed: ${error.message}');
+          ad.dispose();
+        },
+      ),
+    ).load();
   }
 
   @override
   void dispose() {
+    AdService.instance.adsReadyNotifier.removeListener(_onAdsReady);
+    _bannerAd?.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -263,7 +300,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       backgroundColor: kBg,
       body: SafeArea(
-        child: Column(
+        child: Stack(
+          children: [
+            Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Top bar
@@ -401,6 +440,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         ),
             ),
+          ],
+        ),
+            if (_bannerAd != null)
+              Positioned(
+                left: 0, right: 0, bottom: 0,
+                child: SizedBox(
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ),
           ],
         ),
       ),

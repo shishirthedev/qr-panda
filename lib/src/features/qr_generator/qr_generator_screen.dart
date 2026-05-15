@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../core/app_theme.dart';
+import '../../services/ad_service.dart';
+import '../../services/premium_service.dart';
 import 'models/qr_generator_data.dart';
 import 'widgets/qr_type_selector.dart';
 import 'widgets/qr_result_screen.dart';
@@ -31,6 +34,8 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   // WiFi security: 0=None, 1=WPA, 2=WEP
   int _wifiSecurityIndex = 1;
 
+  BannerAd? _bannerAd;
+
   @override
   void initState() {
     super.initState();
@@ -40,10 +45,17 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     } else {
       _qrData = QRGeneratorData.defaultValues();
     }
+    if (AdService.instance.adsReadyNotifier.value) {
+      _loadBanner();
+    } else {
+      AdService.instance.adsReadyNotifier.addListener(_onAdsReady);
+    }
   }
 
   @override
   void dispose() {
+    AdService.instance.adsReadyNotifier.removeListener(_onAdsReady);
+    _bannerAd?.dispose();
     _textController.dispose();
     _urlController.dispose();
     _phoneController.dispose();
@@ -54,12 +66,40 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     super.dispose();
   }
 
+  void _onAdsReady() {
+    AdService.instance.adsReadyNotifier.removeListener(_onAdsReady);
+    _loadBanner();
+  }
+
+  void _loadBanner() {
+    if (PremiumService.instance.isPremium) return;
+    final config = AdService.instance.config;
+    if (!config.bannerAdsEnabled || config.bannerAdUnitId.isEmpty) return;
+
+    BannerAd(
+      adUnitId: config.bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) setState(() => _bannerAd = ad as BannerAd);
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('[QRGenerator] Banner failed: ${error.message}');
+          ad.dispose();
+        },
+      ),
+    ).load();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBg,
       body: SafeArea(
-        child: Column(
+        child: Stack(
+          children: [
+            Column(
           children: [
             // Custom AppBar
             Padding(
@@ -134,6 +174,19 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 ),
               ),
             ),
+          ],
+        ),
+            // Banner pinned at the bottom
+            if (_bannerAd != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SizedBox(
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ),
           ],
         ),
       ),

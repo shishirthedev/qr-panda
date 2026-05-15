@@ -17,7 +17,8 @@ class AdService {
   final ValueNotifier<bool> adsReadyNotifier = ValueNotifier(false);
 
   InterstitialAd? _interstitialAd;
-  int _actionCount = 0;
+  int _dailyInterstitialCount = 0;
+  DateTime _lastResetDate = DateTime.now();
 
   bool get _canShowAds =>
       _config.adsEnabled && !PremiumService.instance.isPremium;
@@ -31,17 +32,24 @@ class AdService {
       final rc = FirebaseRemoteConfig.instance;
       await rc.setConfigSettings(RemoteConfigSettings(
         fetchTimeout: const Duration(seconds: 10),
-        minimumFetchInterval: const Duration(hours: 1),
+        minimumFetchInterval: const Duration(seconds: 0), // TODO: change to hours: 1 before release
       ));
       await rc.setDefaults({'qr_panda_ads_config': '{}'});
-      await rc.fetchAndActivate();
+      final activated = await rc.fetchAndActivate();
       final raw = rc.getString('qr_panda_ads_config');
+      debugPrint('[AdService] Remote config fetched. activated=$activated');
+      debugPrint('[AdService] Raw config: $raw');
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
       _config = AdConfig.fromJson(decoded);
+      debugPrint('[AdService] Config parsed — adsEnabled=${_config.adsEnabled} banner=${_config.bannerAdsEnabled} interstitial=${_config.interstitialAdsEnabled} useTestAds=${_config.useTestAds}');
+      debugPrint('[AdService] Banner unit: ${_config.bannerAdUnitId}');
+      debugPrint('[AdService] Interstitial unit: ${_config.interstitialAdUnitId}');
     } catch (e) {
       debugPrint('[AdService] Remote config fetch failed: $e');
       _config = AdConfig.disabled();
     }
+
+    debugPrint('[AdService] isPremium=${PremiumService.instance.isPremium} _canShowAds=$_canShowAds');
 
     if (!_canShowAds) {
       debugPrint('[AdService] Ads disabled or user is premium — skipping init.');
@@ -49,6 +57,7 @@ class AdService {
     }
 
     await MobileAds.instance.initialize();
+    debugPrint('[AdService] MobileAds initialized.');
     adsReadyNotifier.value = true;
 
     if (_config.interstitialAdsEnabled) _preloadInterstitial();
@@ -113,11 +122,20 @@ class AdService {
   void recordAction() {
     if (!_canShowAds || !_config.interstitialAdsEnabled) return;
 
-    _actionCount++;
-    final freq = _config.interstitialFrequency;
-    if (freq > 0 && _actionCount % freq == 0) {
-      _showInterstitial();
+    // Reset daily count if date has changed
+    final today = DateTime.now();
+    if (today.day != _lastResetDate.day ||
+        today.month != _lastResetDate.month ||
+        today.year != _lastResetDate.year) {
+      _dailyInterstitialCount = 0;
+      _lastResetDate = today;
     }
+
+    final max = _config.maxInterstitialsPerDay;
+    if (max > 0 && _dailyInterstitialCount >= max) return;
+
+    _dailyInterstitialCount++;
+    _showInterstitial();
   }
 
   void _showInterstitial() {

@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../core/app_theme.dart';
+import '../../../services/ad_service.dart';
+import '../../../services/premium_service.dart';
 import '../models/qr_scan_result.dart';
 
-class ScanResultDisplay extends StatelessWidget {
+class ScanResultDisplay extends StatefulWidget {
   final QRScanResult result;
   final VoidCallback onContinueScanning;
 
@@ -15,6 +18,47 @@ class ScanResultDisplay extends StatelessWidget {
     required this.result,
     required this.onContinueScanning,
   });
+
+  @override
+  State<ScanResultDisplay> createState() => _ScanResultDisplayState();
+}
+
+class _ScanResultDisplayState extends State<ScanResultDisplay> {
+  BannerAd? _bannerAd;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBanner();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  void _loadBanner() {
+    if (PremiumService.instance.isPremium) return;
+    final config = AdService.instance.config;
+    if (!config.bannerAdsEnabled || config.bannerAdUnitId.isEmpty) return;
+    BannerAd(
+      adUnitId: config.bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) setState(() => _bannerAd = ad as BannerAd);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    ).load();
+  }
+
+  QRScanResult get result => widget.result;
+  VoidCallback get onContinueScanning => widget.onContinueScanning;
 
   Color get _typeColor {
     switch (result.type) {
@@ -99,7 +143,16 @@ class ScanResultDisplay extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 16),
+
+          // Banner ad above actions
+          if (_bannerAd != null)
+            SizedBox(
+              height: _bannerAd!.size.height.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            ),
+
+          const SizedBox(height: 16),
 
           // Actions row
           Row(
