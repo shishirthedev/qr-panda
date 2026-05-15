@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
-import 'package:quickqr/features/login/ui/login_page.dart';
+import 'package:quickqr/src/core/app_theme.dart';
 import 'package:quickqr/src/features/counter/counter_page.dart';
 import 'package:quickqr/src/features/counter/counter_view_model.dart';
 import 'package:quickqr/src/features/counter_bloc/bloc/counter_bloc.dart';
@@ -31,9 +31,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => CounterBloc(),
-      child: const MaterialApp(
+      child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: HomePage(),
+        theme: AppTheme.darkTheme,
+        themeMode: ThemeMode.dark,
+        home: const HomePage(),
       ),
     );
   }

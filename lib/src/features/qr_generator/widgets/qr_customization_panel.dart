@@ -196,7 +196,7 @@ class _ColorPickerState extends State<ColorPicker> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 300,
       height: 200,
       child: _buildColorPalette(),

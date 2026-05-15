@@ -5,10 +5,10 @@ class CounterButtons extends StatelessWidget {
   final VoidCallback onDecrement;
 
   const CounterButtons({
-    Key? key,
+    super.key,
     required this.onIncrement,
     required this.onDecrement,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

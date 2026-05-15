@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../core/app_theme.dart';
 import '../models/qr_scan_result.dart';
 
 class ScanResultDisplay extends StatelessWidget {
@@ -14,201 +16,169 @@ class ScanResultDisplay extends StatelessWidget {
     required this.onContinueScanning,
   });
 
+  Color get _typeColor {
+    switch (result.type) {
+      case QRType.url:
+        return kTypeUrl;
+      case QRType.contact:
+        return kTypeContact;
+      case QRType.wifi:
+        return kTypeWifi;
+      default:
+        return kTypeText;
+    }
+  }
+
+  String get _typeLabel {
+    switch (result.type) {
+      case QRType.url:
+        return 'URL';
+      case QRType.contact:
+        return 'CONTACT';
+      case QRType.wifi:
+        return 'WIFI';
+      default:
+        return 'TEXT';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(result.title ?? 'QR Code Detected'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTypeIndicator(),
-            const SizedBox(height: 16),
-            _buildContentDisplay(),
-            if (result.metadata != null && result.metadata!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _buildMetadataDisplay(),
-            ],
-          ],
-        ),
+    return Container(
+      decoration: const BoxDecoration(
+        color: kSurface2,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      actions: _buildActions(context),
-    );
-  }
-
-  Widget _buildTypeIndicator() {
-    IconData iconData;
-    Color color;
-    
-    switch (result.type) {
-      case QRType.url:
-        iconData = Icons.link;
-        color = Colors.blue;
-        break;
-      case QRType.contact:
-        iconData = Icons.person;
-        color = Colors.green;
-        break;
-      case QRType.wifi:
-        iconData = Icons.wifi;
-        color = Colors.orange;
-        break;
-      case QRType.text:
-      default:
-        iconData = Icons.text_fields;
-        color = Colors.grey;
-        break;
-    }
-
-    return Row(
-      children: [
-        Icon(iconData, color: color, size: 24),
-        const SizedBox(width: 8),
-        Text(
-          result.type.name.toUpperCase(),
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: color,
-            fontSize: 16,
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 18),
+              decoration: BoxDecoration(
+                color: kBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
           ),
-        ),
-      ],
-    );
-  }
 
-  Widget _buildContentDisplay() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Content:',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
+          // Type badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _typeColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              _typeLabel,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.8,
+                color: Colors.white,
+              ),
+            ),
           ),
-          child: SelectableText(
+
+          const SizedBox(height: 14),
+
+          // Content heading
+          Text(
             result.content,
-            style: const TextStyle(fontFamily: 'monospace'),
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: kText,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
-    );
-  }
 
-  Widget _buildMetadataDisplay() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Details:',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        ...result.metadata!.entries.map((entry) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 28),
+
+          // Actions row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              SizedBox(
-                width: 80,
-                child: Text(
-                  '${entry.key}:',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
+              _buildAction(
+                context,
+                icon: Icons.copy,
+                label: 'Copy',
+                onTap: () => _copyToClipboard(context, result.content),
               ),
-              Expanded(
-                child: Text(entry.value.toString()),
+              _buildAction(
+                context,
+                icon: Icons.open_in_new,
+                label: 'Open',
+                onTap: result.type == QRType.url
+                    ? () => _openLink(context, result.content)
+                    : null,
+              ),
+              _buildAction(
+                context,
+                icon: Icons.share,
+                label: 'Share',
+                onTap: () => _shareResult(result),
+              ),
+              _buildAction(
+                context,
+                icon: Icons.qr_code_scanner,
+                label: 'Scan Again',
+                onTap: () {
+                  Navigator.of(context).pop();
+                  onContinueScanning();
+                },
               ),
             ],
           ),
-        )),
-      ],
+        ],
+      ),
     );
   }
 
-  List<Widget> _buildActions(BuildContext context) {
-    final actions = <Widget>[];
-
-    // Copy action
-    actions.add(
-      TextButton.icon(
-        onPressed: () => _copyToClipboard(context, result.content),
-        icon: const Icon(Icons.copy),
-        label: const Text('Copy'),
+  Widget _buildAction(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: kSurface,
+              border: Border.all(color: kBorder, width: 1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              icon,
+              color: onTap != null ? kPrimary : kTextMuted,
+              size: 22,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: GoogleFonts.inter(fontSize: 12, color: kText2),
+          ),
+        ],
       ),
     );
-
-    // Share action
-    actions.add(
-      TextButton.icon(
-        onPressed: () => _shareResult(result),
-        icon: const Icon(Icons.share),
-        label: const Text('Share'),
-      ),
-    );
-
-    // Type-specific actions
-    switch (result.type) {
-      case QRType.url:
-        actions.add(
-          TextButton.icon(
-            onPressed: () => _openLink(context, result.content),
-            icon: const Icon(Icons.open_in_new),
-            label: const Text('Open Link'),
-          ),
-        );
-        break;
-      case QRType.contact:
-        actions.add(
-          TextButton.icon(
-            onPressed: () => _saveContact(result),
-            icon: const Icon(Icons.person_add),
-            label: const Text('Save Contact'),
-          ),
-        );
-        break;
-      case QRType.wifi:
-        actions.add(
-          TextButton.icon(
-            onPressed: () => _connectToWifi(result),
-            icon: const Icon(Icons.wifi),
-            label: const Text('Connect'),
-          ),
-        );
-        break;
-      default:
-        break;
-    }
-
-    // Continue scanning action
-    actions.add(
-      TextButton.icon(
-        onPressed: onContinueScanning,
-        icon: const Icon(Icons.camera_alt),
-        label: const Text('Continue'),
-      ),
-    );
-
-    return actions;
   }
 
   void _copyToClipboard(BuildContext context, String text) {
     Clipboard.setData(ClipboardData(text: text));
-    // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Copied to clipboard'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
+      const SnackBar(content: Text('Copied to clipboard')),
     );
   }
 
@@ -217,139 +187,38 @@ class ScanResultDisplay extends StatelessWidget {
     if (result.title != null) {
       shareText = '${result.title}\n$shareText';
     }
-    
     Share.share(shareText, subject: 'QR Code Scan Result');
   }
 
   Future<void> _openLink(BuildContext context, String url) async {
     try {
-      // Clean and validate the URL
       String urlToLaunch = url.trim();
-      
-      // Remove any whitespace and ensure proper formatting
-      if (urlToLaunch.isEmpty) {
-        throw Exception('Empty URL');
-      }
-      
-      // Ensure URL has a scheme
-      if (!urlToLaunch.startsWith('http://') && !urlToLaunch.startsWith('https://')) {
-        // Check if it looks like a domain
+      if (urlToLaunch.isEmpty) throw Exception('Empty URL');
+
+      if (!urlToLaunch.startsWith('http://') &&
+          !urlToLaunch.startsWith('https://')) {
         if (urlToLaunch.contains('.') && !urlToLaunch.contains(' ')) {
           urlToLaunch = 'https://$urlToLaunch';
         } else {
           throw Exception('Invalid URL format');
         }
       }
-      
-      // Parse the URI
+
       final uri = Uri.parse(urlToLaunch);
-      
-      // Validate the URI
-      if (uri.host.isEmpty) {
-        throw Exception('Invalid URL: no host found');
+      if (uri.host.isEmpty) throw Exception('Invalid URL: no host found');
+
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open: $urlToLaunch')),
+        );
       }
-      
-      // Directly open in external browser
-      await _launchUrl(context, uri, LaunchMode.externalApplication);
     } catch (e) {
-      // Show error message with copy option
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Invalid URL format: $e'),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Copy URL',
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: url));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('URL copied to clipboard'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
-            ),
-          ),
+          SnackBar(content: Text('Error opening link: $e')),
         );
       }
     }
-  }
-
-
-
-  Future<void> _launchUrl(BuildContext context, Uri uri, LaunchMode mode) async {
-    try {
-      // Try to launch URL directly with external application mode
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-      
-      if (!launched) {
-        // If launchUrl fails, try alternative approach
-        final urlString = uri.toString();
-        final alternativeUri = Uri.parse(urlString);
-        
-        final alternativeLaunched = await launchUrl(
-          alternativeUri,
-          mode: LaunchMode.externalApplication,
-        );
-        
-        if (!alternativeLaunched && context.mounted) {
-          // Show error message with copy option
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Could not open: $urlString'),
-              backgroundColor: Colors.red,
-              action: SnackBarAction(
-                label: 'Copy URL',
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: urlString));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('URL copied to clipboard'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      // Show error message with copy option
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error opening link: $e'),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Copy URL',
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: uri.toString()));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('URL copied to clipboard'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      }
-    }
-  }
-
-  void _saveContact(QRScanResult result) {
-    // Implementation for saving contact to phone book
-    // This would require additional packages like contacts_service
-  }
-
-  void _connectToWifi(QRScanResult result) {
-    // Implementation for connecting to WiFi
-    // This would require additional packages and platform-specific code
   }
 }

@@ -1,4 +1,4 @@
-import 'AuthRepository.dart';
+import 'auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
 

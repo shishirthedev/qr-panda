@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class CounterDisplay extends StatelessWidget {
   final int count;
 
-  const CounterDisplay({Key? key, required this.count}) : super(key: key);
+  const CounterDisplay({super.key, required this.count});
 
   @override
   Widget build(BuildContext context) {

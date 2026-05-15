@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'qr_scanner_event.dart';
 import 'qr_scanner_state.dart';
-import 'models/qr_scan_result.dart';
 
 class QRScannerBloc extends Bloc<QRScannerEvent, QRScannerState> {
   QRScannerBloc() : super(const QRScannerInitial()) {

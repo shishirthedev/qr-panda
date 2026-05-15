@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../core/app_theme.dart';
 import '../../../models/qr_history_item.dart';
 import '../../../services/qr_history_service.dart';
 import '../models/qr_generator_data.dart';
@@ -31,228 +33,284 @@ class _QRResultScreenState extends State<QRResultScreen> {
     _qrData = widget.qrData.copyWith(qrContent: widget.qrContent);
   }
 
+  Color get _accentColor {
+    final c = widget.qrContent;
+    if (c.startsWith('http')) return kTypeUrl;
+    if (c.startsWith('tel:')) return kTypePhone;
+    if (c.startsWith('WIFI:')) return kTypeWifi;
+    if (c.startsWith('BEGIN:VCARD')) return kTypeContact;
+    return kTypeText;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'QR Code Result',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF10B981).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.save, color: Color(0xFF10B981)),
-              onPressed: _saveQRCode,
-              tooltip: 'Save QR Code',
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.share, color: Color(0xFF3B82F6)),
-              onPressed: _shareQRCode,
-              tooltip: 'Share QR Code',
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: kBg,
+      body: SafeArea(
+        child: Stack(
           children: [
-            // QR Code Display
-            _buildQRCodeDisplay(),
-            const SizedBox(height: 24),
-            
-            // Customization Panel
-            _buildCustomizationPanel(),
+            // Radial glow
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 300,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topCenter,
+                    radius: 1.0,
+                    colors: [
+                      _accentColor.withValues(alpha: 0.16),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            Column(
+              children: [
+                // Top bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: kSurface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: kBorder),
+                          ),
+                          child: const Icon(Icons.arrow_back, color: kText, size: 20),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'QR Code',
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: kText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // QR code
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(22),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _accentColor.withValues(alpha: 0.30),
+                                  blurRadius: 32,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: RepaintBoundary(
+                              key: _qrKey,
+                              child: QrImageView(
+                                data: _qrData.qrContent,
+                                version: QrVersions.auto,
+                                size: 260,
+                                backgroundColor: _qrData.backgroundColor,
+                                dataModuleStyle: QrDataModuleStyle(
+                                  dataModuleShape: QrDataModuleShape.square,
+                                  color: _qrData.foregroundColor,
+                                ),
+                                eyeStyle: QrEyeStyle(
+                                  eyeShape: QrEyeShape.square,
+                                  color: _qrData.foregroundColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Color dots
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _colorDot(_qrData.foregroundColor),
+                            const SizedBox(width: 8),
+                            _colorDot(_qrData.backgroundColor),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Summary card
+                        Container(
+                          decoration: BoxDecoration(
+                            color: kSurface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: kBorder, width: 1),
+                          ),
+                          padding: const EdgeInsets.all(14),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: _accentColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  _getContentIcon(),
+                                  color: _accentColor,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _getQRCodeTitle(),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        color: kText2,
+                                      ),
+                                    ),
+                                    Text(
+                                      _getQRCodeDescription(),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: kText,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // 3 action buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _actionButton(
+                                icon: Icons.save_outlined,
+                                label: 'Save',
+                                onTap: _saveQRCode,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _actionButton(
+                                icon: Icons.share_outlined,
+                                label: 'Share',
+                                onTap: _shareQRCode,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _actionButton(
+                                icon: Icons.edit_outlined,
+                                label: 'Edit',
+                                onTap: () => Navigator.of(context).pop(),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Customization panel
+                        QRCustomizationPanel(
+                          qrData: _qrData,
+                          onDataChanged: (data) {
+                            setState(() => _qrData = data);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQRCodeDisplay() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Generated QR Code',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
-          ),
+  Widget _colorDot(Color color) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: kSurface2, width: 3),
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: kPrimary, width: 1),
         ),
-        const SizedBox(height: 16),
-        Center(
-          child: RepaintBoundary(
-            key: _qrKey,
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.grey[200]!,
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: QrImageView(
-                data: _qrData.qrContent,
-                version: QrVersions.auto,
-                size: 300.0,
-                backgroundColor: _qrData.backgroundColor,
-                dataModuleStyle: QrDataModuleStyle(
-                  dataModuleShape: QrDataModuleShape.square,
-                  color: _qrData.foregroundColor,
-                ),
-                eyeStyle: QrEyeStyle(
-                  eyeShape: QrEyeShape.square,
-                  color: _qrData.foregroundColor,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        
-        // Action Buttons
-        Row(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: _saveQRCode,
-                    child: const Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.save,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Save to History',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: _shareQRCode,
-                    child: const Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.share,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Share QR Code',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+            Icon(icon, color: kPrimaryLight, size: 18),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: kPrimaryLight,
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildCustomizationPanel() {
-    return QRCustomizationPanel(
-      qrData: _qrData,
-      onDataChanged: (data) {
-        setState(() {
-          _qrData = data;
-        });
-      },
-    );
+  IconData _getContentIcon() {
+    final c = _qrData.qrContent;
+    if (c.startsWith('http')) return Icons.link;
+    if (c.startsWith('tel:')) return Icons.phone;
+    if (c.startsWith('WIFI:')) return Icons.wifi;
+    if (c.startsWith('BEGIN:VCARD')) return Icons.person;
+    return Icons.text_fields;
   }
 
   Future<void> _saveQRCode() async {
@@ -263,32 +321,16 @@ class _QRResultScreenState extends State<QRResultScreen> {
         title: _getQRCodeTitle(),
         description: _getQRCodeDescription(),
       );
-      
       await _historyService.insertQRHistory(historyItem);
-      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('QR Code saved to history'),
-            backgroundColor: const Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          const SnackBar(content: Text('QR Code saved to history')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save QR code: $e'),
-            backgroundColor: const Color(0xFFEF4444),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          SnackBar(content: Text('Failed to save QR code: $e')),
         );
       }
     }
@@ -296,67 +338,42 @@ class _QRResultScreenState extends State<QRResultScreen> {
 
   Future<void> _shareQRCode() async {
     try {
-      String shareText = 'QR Code Content: ${_qrData.qrContent}';
-      if (_qrData.qrContent.isNotEmpty) {
-        shareText = 'Check out this QR code!\n\nContent: ${_qrData.qrContent}';
-      }
-      
-      await Share.share(shareText, subject: 'QR Code from QuickQR');
+      final shareText = 'Check out this QR code!\n\nContent: ${_qrData.qrContent}';
+      await Share.share(shareText, subject: 'QR Code from QR Panda');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to share QR code: $e'),
-            backgroundColor: const Color(0xFFEF4444),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          SnackBar(content: Text('Failed to share QR code: $e')),
         );
       }
     }
   }
 
   String _getQRCodeTitle() {
-    final content = _qrData.qrContent;
-    if (content.startsWith('http')) {
-      return 'URL QR Code';
-    } else if (content.startsWith('tel:')) {
-      return 'Phone QR Code';
-    } else if (content.startsWith('WIFI:')) {
-      return 'WiFi QR Code';
-    } else if (content.startsWith('BEGIN:VCARD')) {
-      return 'Contact QR Code';
-    } else {
-      return 'Text QR Code';
-    }
+    final c = _qrData.qrContent;
+    if (c.startsWith('http')) return 'URL QR Code';
+    if (c.startsWith('tel:')) return 'Phone QR Code';
+    if (c.startsWith('WIFI:')) return 'WiFi QR Code';
+    if (c.startsWith('BEGIN:VCARD')) return 'Contact QR Code';
+    return 'Text QR Code';
   }
 
   String _getQRCodeDescription() {
-    final content = _qrData.qrContent;
-    if (content.startsWith('http')) {
-      return content;
-    } else if (content.startsWith('tel:')) {
-      return content.substring(4);
-    } else if (content.startsWith('WIFI:')) {
-      final parts = content.split(';');
-      for (final part in parts) {
-        if (part.startsWith('S:')) {
-          return 'WiFi: ${part.substring(2)}';
-        }
+    final c = _qrData.qrContent;
+    if (c.startsWith('http')) return c;
+    if (c.startsWith('tel:')) return c.substring(4);
+    if (c.startsWith('WIFI:')) {
+      for (final part in c.split(';')) {
+        if (part.startsWith('S:')) return 'WiFi: ${part.substring(2)}';
       }
       return 'WiFi Network';
-    } else if (content.startsWith('BEGIN:VCARD')) {
-      final lines = content.split('\n');
-      for (final line in lines) {
-        if (line.startsWith('FN:')) {
-          return 'Contact: ${line.substring(3)}';
-        }
+    }
+    if (c.startsWith('BEGIN:VCARD')) {
+      for (final line in c.split('\n')) {
+        if (line.startsWith('FN:')) return 'Contact: ${line.substring(3)}';
       }
       return 'Contact Information';
-    } else {
-      return content.length > 50 ? '${content.substring(0, 50)}...' : content;
     }
+    return c.length > 50 ? '${c.substring(0, 50)}...' : c;
   }
 }

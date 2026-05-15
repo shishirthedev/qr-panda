@@ -1,11 +1,13 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:quickqr/constants/strings.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:flutter/services.dart';
+import '../../core/app_theme.dart';
 import '../../models/qr_history_item.dart';
 import '../../services/qr_history_service.dart';
 import 'qr_scanner_bloc.dart';
@@ -23,30 +25,67 @@ class QRScannerScreen extends StatefulWidget {
   State<QRScannerScreen> createState() => _QRScannerScreenState();
 }
 
-class _QRScannerScreenState extends State<QRScannerScreen> {
+enum _CameraPermissionState { unknown, granted, denied, permanentlyDenied }
+
+class _QRScannerScreenState extends State<QRScannerScreen>
+    with WidgetsBindingObserver {
   MobileScannerController? controller;
   final QRHistoryService _historyService = QRHistoryService();
-  bool _isCameraPermissionGranted = false;
+  _CameraPermissionState _permissionState = _CameraPermissionState.unknown;
   bool _isScanning = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     controller = MobileScannerController();
     _requestCameraPermission();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     controller?.dispose();
     super.dispose();
   }
 
+  // Re-check whenever app resumes and camera isn't running yet
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        _permissionState != _CameraPermissionState.granted) {
+      _checkCameraPermission();
+    }
+  }
+
   Future<void> _requestCameraPermission() async {
     final status = await Permission.camera.request();
+    await _applyPermissionStatus(status);
+  }
+
+  Future<void> _checkCameraPermission() async {
+    final status = await Permission.camera.status;
+    await _applyPermissionStatus(status);
+  }
+
+  Future<void> _applyPermissionStatus(PermissionStatus status) async {
+    if (!mounted) return;
+    final wasGranted = _permissionState == _CameraPermissionState.granted;
+
     setState(() {
-      _isCameraPermissionGranted = status.isGranted;
+      if (status.isGranted) {
+        _permissionState = _CameraPermissionState.granted;
+      } else if (status.isPermanentlyDenied || status.isRestricted) {
+        _permissionState = _CameraPermissionState.permanentlyDenied;
+      } else {
+        _permissionState = _CameraPermissionState.denied;
+      }
     });
+
+    // Permission just became granted — ensure the controller is running
+    if (!wasGranted && status.isGranted) {
+      await controller?.start();
+    }
   }
 
   void _onDetect(BarcodeCapture capture) {
@@ -56,17 +95,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         setState(() {
           _isScanning = true;
         });
-        
+
         final result = QRScanResult.fromScannedData(barcode.rawValue!);
         context.read<QRScannerBloc>().add(QRCodeScanned(result));
-        
-        // Save to history
+
         _saveToHistory(result.content);
-        
-        // Stop scanning temporarily
         controller?.stop();
-        
-        // Resume after a delay
+
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             setState(() {
@@ -86,78 +121,60 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         title: _getScanTitle(content),
         description: _getScanDescription(content),
       );
-      
       await _historyService.insertQRHistory(historyItem);
     } catch (e) {
-      // Silently fail - don't interrupt the scanning experience
       debugPrint('Failed to save to history: $e');
     }
   }
 
   String _getScanTitle(String content) {
-    if (content.startsWith('http')) {
-      return AppStrings.urlQRCode;
-    } else if (content.startsWith('tel:')) {
-      return AppStrings.phoneQRCode;
-    } else if (content.startsWith('WIFI:')) {
-      return AppStrings.wifiQRCode;
-    } else if (content.startsWith('BEGIN:VCARD')) {
-      return AppStrings.contactQRCode;
-    } else {
-      return AppStrings.textQRCode;
-    }
+    if (content.startsWith('http')) return AppStrings.urlQRCode;
+    if (content.startsWith('tel:')) return AppStrings.phoneQRCode;
+    if (content.startsWith('WIFI:')) return AppStrings.wifiQRCode;
+    if (content.startsWith('BEGIN:VCARD')) return AppStrings.contactQRCode;
+    return AppStrings.textQRCode;
   }
 
   String _getScanDescription(String content) {
-    if (content.startsWith('http')) {
-      return content;
-    } else if (content.startsWith('tel:')) {
-      return content.substring(4);
-    } else if (content.startsWith('WIFI:')) {
+    if (content.startsWith('http')) return content;
+    if (content.startsWith('tel:')) return content.substring(4);
+    if (content.startsWith('WIFI:')) {
       final parts = content.split(';');
       for (final part in parts) {
-        if (part.startsWith('S:')) {
-          return '${AppStrings.wifiPrefix}${part.substring(2)}';
-        }
+        if (part.startsWith('S:')) return '${AppStrings.wifiPrefix}${part.substring(2)}';
       }
       return AppStrings.wifiNetwork;
-    } else if (content.startsWith('BEGIN:VCARD')) {
+    }
+    if (content.startsWith('BEGIN:VCARD')) {
       final lines = content.split('\n');
       for (final line in lines) {
-        if (line.startsWith('FN:')) {
-          return '${AppStrings.contactPrefix}${line.substring(3)}';
-        }
+        if (line.startsWith('FN:')) return '${AppStrings.contactPrefix}${line.substring(3)}';
       }
       return AppStrings.contactInformation;
-    } else {
-      return content.length > 50 ? '${content.substring(0, 50)}...' : content;
     }
+    return content.length > 50 ? '${content.substring(0, 50)}...' : content;
   }
 
   Future<void> _scanFromGallery() async {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      
+
       if (image != null) {
-        // Show loading indicator
+        if (!mounted) return;
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (context) => const Center(child: CircularProgressIndicator()),
         );
 
         try {
           final result = await ImageQRScannerService().scanImageFromFile(image.path);
-          
-          // Hide loading dialog
+          if (!mounted) return;
           Navigator.of(context).pop();
-          
+
           if (result != null) {
             context.read<QRScannerBloc>().add(QRCodeScanned(result));
-            // Save to history
             _saveToHistory(result.content);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -165,15 +182,15 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             );
           }
         } catch (e) {
-          // Hide loading dialog
+          if (!mounted) return;
           Navigator.of(context).pop();
-          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error scanning image: $e')),
           );
         }
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error picking image: $e')),
       );
@@ -183,41 +200,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'QR Scanner',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.photo_library, color: Color(0xFF3B82F6)),
-              onPressed: _scanFromGallery,
-              tooltip: AppStrings.scanFromGallery,
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
       body: BlocListener<QRScannerBloc, QRScannerState>(
         listener: (context, state) {
           if (state is QRScannerSuccess) {
-            _showScanResultDialog(state.result);
+            _showScanResultSheet(state.result);
           } else if (state is QRScannerError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
@@ -230,157 +218,179 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 
   Widget _buildBody() {
-    if (!_isCameraPermissionGranted) {
+    if (_permissionState != _CameraPermissionState.granted) {
       return _buildPermissionRequest();
     }
 
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: _buildQRScanner(),
+        // Camera feed
+        Positioned.fill(
+          child: MobileScanner(
+            controller: controller,
+            onDetect: _onDetect,
+          ),
         ),
-        _buildScanInstructions(),
+        // Overlay
+        const Positioned.fill(child: QRScannerOverlay()),
+        // Top bar
+        Positioned(
+          top: 52,
+          left: 16,
+          right: 16,
+          child: _buildTopBar(),
+        ),
       ],
     );
   }
 
+  Widget _buildTopBar() {
+    return Row(
+      children: [
+        _glassButton(
+          child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+          onTap: () => Navigator.of(context).pop(),
+        ),
+        const Spacer(),
+        Text(
+          'Scan QR',
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+        ),
+        const Spacer(),
+        _glassButton(
+          child: const Icon(Icons.photo_library_outlined, color: Colors.white, size: 22),
+          onTap: _scanFromGallery,
+        ),
+      ],
+    );
+  }
+
+  Widget _glassButton({required Widget child, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0x8C141420),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+
+
   Widget _buildPermissionRequest() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+    final isPermanent =
+        _permissionState == _CameraPermissionState.permanentlyDenied;
+
+    final description = isPermanent
+        ? 'Camera access was denied. Please enable it in your device Settings to scan QR codes.'
+        : 'QR Panda needs camera access to scan QR codes. Please allow access when prompted.';
+
+    final buttonLabel = isPermanent ? 'Open Settings' : 'Allow Camera Access';
+
+    return Container(
+      color: kBg,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_outline, size: 64, color: kRose),
+              const SizedBox(height: 24),
+              Text(
+                'Camera Access Required',
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: kText,
+                ),
+                textAlign: TextAlign.center,
               ),
-              child: const Icon(
-                Icons.camera_alt_outlined,
-                size: 80,
-                color: Color(0xFF3B82F6),
+              const SizedBox(height: 12),
+              Text(
+                description,
+                style: GoogleFonts.inter(fontSize: 14, color: kText2, height: 1.5),
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              AppStrings.cameraPermissionRequired,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1F2937),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              AppStrings.cameraPermissionDescription,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF6B7280),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Container(
-              width: double.infinity,
-              height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3B82F6),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+              const SizedBox(height: 32),
+              GestureDetector(
+                onTap: isPermanent ? openAppSettings : _requestCameraPermission,
+                child: Container(
+                  width: double.infinity,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment(-1, -1),
+                      end: Alignment(1, 1),
+                      colors: [kPrimaryDark, kPrimary, kPrimaryLight],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: kPrimaryGlow,
+                        blurRadius: 28,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: _requestCameraPermission,
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      AppStrings.grantPermission,
-                      style: TextStyle(
-                        color: Colors.white,
+                      buttonLabel,
+                      style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+              if (isPermanent) ...[
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Go Back',
+                    style: GoogleFonts.inter(fontSize: 14, color: kText2),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildQRScanner() {
-    return MobileScanner(
-      controller: controller,
-      onDetect: _onDetect,
-      overlay: const QRScannerOverlay(),
-    );
-  }
-
-  Widget _buildScanInstructions() {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Text(
-            AppStrings.scanInstructions,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF374151),
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            AppStrings.galleryInstructions,
-            style: TextStyle(
-              fontSize: 13,
-              color: Color(0xFF6B7280),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showScanResultDialog(QRScanResult result) {
-    showDialog(
+  void _showScanResultSheet(QRScanResult result) {
+    showModalBottomSheet(
       context: context,
+      isDismissible: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (context) => ScanResultDisplay(
         result: result,
-                 onContinueScanning: () {
-           Navigator.of(context).pop();
-           controller?.start();
-         },
+        onContinueScanning: () {
+          controller?.start();
+        },
       ),
     );
   }
-
-
 }

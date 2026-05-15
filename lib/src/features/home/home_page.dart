@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:quickqr/constants/strings.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/app_theme.dart';
 import '../history/history_screen.dart';
 import '../qr_generator/qr_generator.dart';
 import '../qr_scanner/qr_scanner.dart';
@@ -12,211 +13,244 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          AppStrings.appName,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome Section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF3B82F6),
-                    Color(0xFF1D4ED8),
-                  ],
+      backgroundColor: kBg,
+      body: Stack(
+        children: [
+          // Radial glow background
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 320,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topCenter,
+                  radius: 1.0,
+                  colors: [kPrimaryGlow, Colors.transparent],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.qr_code,
-                      size: 48,
-                      color: Colors.white,
-                    ),
+                  const SizedBox(height: 8),
+                  // Top bar
+                  _buildTopBar(context),
+                  const SizedBox(height: 16),
+                  // Premium banner
+                  _buildPremiumBanner(context),
+                  const SizedBox(height: 28),
+                  // Hero text
+                  _buildHeroText(),
+                  const SizedBox(height: 28),
+                  // Feature cards
+                  _buildFeatureCard(
+                    context,
+                    accentColor: kGreen,
+                    icon: Icons.qr_code_scanner,
+                    title: 'Scan QR Code',
+                    subtitle: 'Point your camera at any QR code',
+                    onTap: () => _navigateToQRScanner(context),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    AppStrings.welcomeTitle,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
+                  _buildFeatureCard(
+                    context,
+                    accentColor: kPrimary,
+                    icon: Icons.add_box_outlined,
+                    title: 'Create QR Code',
+                    subtitle: 'Create QR codes for text, URL, WiFi & more',
+                    onTap: () => _navigateToQRGenerator(context),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    AppStrings.welcomeSubtitle,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
+                  const SizedBox(height: 16),
+                  _buildFeatureCard(
+                    context,
+                    accentColor: kAmber,
+                    icon: Icons.history,
+                    title: 'History',
+                    subtitle: 'Browse and reuse your past codes',
+                    onTap: () => _navigateToHistory(context),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
-            
-            // Features Section
-            const Text(
-              AppStrings.featuresTitle,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1F2937),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
+    return Row(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            'assets/icon/icon_master_1024.png',
+            width: 32,
+            height: 32,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          'QR Panda',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: kText,
+          ),
+        ),
+        const Spacer(),
+        IconButton(
+          icon: const Icon(Icons.settings_outlined, color: kText2),
+          onPressed: () {},
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPremiumBanner(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showPremiumSheet(context),
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [kAmber, Color(0xFFF97316)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Text(
+              '✦ GO PREMIUM — REMOVE ADS',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.8,
+                color: const Color(0xFF1F1108),
               ),
             ),
-            const SizedBox(height: 16),
-            
-            _buildFeatureCard(
-              context,
-              icon: Icons.qr_code_scanner,
-              title: AppStrings.scannerTitle,
-              subtitle: AppStrings.scannerSubtitle,
-              color: const Color(0xFF10B981),
-              onTap: () => _navigateToQRScanner(context),
+            const Spacer(),
+            Text(
+              'Unlock ›',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1F1108),
+              ),
             ),
-            const SizedBox(height: 16),
-            _buildFeatureCard(
-              context,
-              icon: Icons.qr_code,
-              title: AppStrings.generatorTitle,
-              subtitle: AppStrings.generatorSubtitle,
-              color: const Color(0xFF3B82F6),
-              onTap: () => _navigateToQRGenerator(context),
-            ),
-            const SizedBox(height: 16),
-            _buildFeatureCard(
-              context,
-              icon: Icons.history,
-              title: AppStrings.historyTitle,
-              subtitle: AppStrings.historySubtitle,
-              color: const Color(0xFF8B5CF6),
-              onTap: () => _navigateToHistory(context),
-            ),
-            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildHeroText() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Scan. Create. Manage.',
+          style: GoogleFonts.inter(
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+            color: kText,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Everything QR, in one place.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: kText2,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildFeatureCard(
     BuildContext context, {
+    required Color accentColor,
     required IconData icon,
     required String title,
     required String subtitle,
-    required Color color,
     required VoidCallback onTap,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 28,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF6B7280),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: const Color(0xFF9CA3AF),
-                    size: 16,
-                  ),
-                ),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: kBorder, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(alpha: 0.10),
+              blurRadius: 24,
+              offset: const Offset(0, 6),
             ),
-          ),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(22, 18, 18, 18),
+        child: Row(
+          children: [
+            // Left accent stripe
+            Container(
+              width: 3,
+              height: 52,
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Icon tile
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, size: 24, color: accentColor),
+            ),
+            const SizedBox(width: 16),
+            // Text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: kText,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: kText2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: kTextMuted),
+          ],
         ),
       ),
     );
@@ -248,6 +282,83 @@ class HomePage extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) => const HistoryScreen(),
+      ),
+    );
+  }
+
+  void _showPremiumSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: kSurface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: kBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Go Premium',
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: kText,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '\$2.99 one-time',
+              style: GoogleFonts.inter(fontSize: 14, color: kText2),
+            ),
+            const SizedBox(height: 32),
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: double.infinity,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment(0.0, -1.0),
+                    end: Alignment(1.0, 1.0),
+                    colors: [kPrimaryDark, kPrimary, kPrimaryLight],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: kPrimaryGlow,
+                      blurRadius: 28,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    'Unlock Premium',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
