@@ -3,12 +3,42 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/app_theme.dart';
+import '../../services/premium_service.dart';
+import '../premium/paywall_screen.dart';
 import '../history/history_screen.dart';
 import '../qr_generator/qr_generator.dart';
 import '../qr_scanner/qr_scanner.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _isPremium = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isPremium = PremiumService.instance.isPremium;
+    PremiumService.instance.isPremiumNotifier.addListener(_onPremiumChanged);
+  }
+
+  @override
+  void dispose() {
+    PremiumService.instance.isPremiumNotifier.removeListener(_onPremiumChanged);
+    super.dispose();
+  }
+
+  void _onPremiumChanged() {
+    if (mounted) {
+      setState(() {
+        _isPremium = PremiumService.instance.isPremium;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,18 +69,15 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
-                  // Top bar
-                  _buildTopBar(context),
-                  const SizedBox(height: 16),
-                  // Premium banner
-                  _buildPremiumBanner(context),
+                  _buildTopBar(),
+                  if (!_isPremium) ...[
+                    const SizedBox(height: 16),
+                    _buildPremiumBanner(),
+                  ],
                   const SizedBox(height: 28),
-                  // Hero text
                   _buildHeroText(),
                   const SizedBox(height: 28),
-                  // Feature cards
                   _buildFeatureCard(
-                    context,
                     accentColor: kGreen,
                     icon: Icons.qr_code_scanner,
                     title: 'Scan QR Code',
@@ -59,7 +86,6 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildFeatureCard(
-                    context,
                     accentColor: kPrimary,
                     icon: Icons.add_box_outlined,
                     title: 'Create QR Code',
@@ -68,7 +94,6 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildFeatureCard(
-                    context,
                     accentColor: kAmber,
                     icon: Icons.history,
                     title: 'History',
@@ -84,7 +109,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  Widget _buildTopBar() {
     return Row(
       children: [
         ClipRRect(
@@ -113,7 +138,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildPremiumBanner(BuildContext context) {
+  Widget _buildPremiumBanner() {
     return GestureDetector(
       onTap: () => _showPremiumSheet(context),
       child: Container(
@@ -178,8 +203,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureCard(
-    BuildContext context, {
+  Widget _buildFeatureCard({
     required Color accentColor,
     required IconData icon,
     required String title,
@@ -204,7 +228,6 @@ class HomePage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(22, 18, 18, 18),
         child: Row(
           children: [
-            // Left accent stripe
             Container(
               width: 3,
               height: 52,
@@ -214,7 +237,6 @@ class HomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // Icon tile
             Container(
               width: 48,
               height: 48,
@@ -225,7 +247,6 @@ class HomePage extends StatelessWidget {
               child: Icon(icon, size: 24, color: accentColor),
             ),
             const SizedBox(width: 16),
-            // Text
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,10 +262,7 @@ class HomePage extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: kText2,
-                    ),
+                    style: GoogleFonts.inter(fontSize: 13, color: kText2),
                   ),
                 ],
               ),
@@ -271,95 +289,21 @@ class HomePage extends StatelessWidget {
   void _navigateToQRGenerator(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const QRGeneratorScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const QRGeneratorScreen()),
     );
   }
 
   void _navigateToHistory(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const HistoryScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const HistoryScreen()),
     );
   }
 
   void _showPremiumSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: kSurface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: kBorder,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Go Premium',
-              style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: kText,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '\$2.99 one-time',
-              style: GoogleFonts.inter(fontSize: 14, color: kText2),
-            ),
-            const SizedBox(height: 32),
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: double.infinity,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment(0.0, -1.0),
-                    end: Alignment(1.0, 1.0),
-                    colors: [kPrimaryDark, kPrimary, kPrimaryLight],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: kPrimaryGlow,
-                      blurRadius: 28,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    'Unlock Premium',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PaywallScreen()),
     );
   }
 }
