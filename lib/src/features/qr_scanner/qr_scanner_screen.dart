@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:quickqr/constants/strings.dart';
 import '../../core/app_theme.dart';
 import '../../models/qr_history_item.dart';
+import '../../services/ad_service.dart';
 import '../../services/qr_history_service.dart';
 import 'qr_scanner_bloc.dart';
 import 'qr_scanner_state.dart';
@@ -391,6 +392,6 @@ class _QRScannerScreenState extends State<QRScannerScreen>
           controller?.start();
         },
       ),
-    );
+    ).then((_) => AdService.instance.recordAction());
   }
 }

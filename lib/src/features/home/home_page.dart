@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../core/app_theme.dart';
+import '../../services/ad_service.dart';
 import '../../services/premium_service.dart';
+import '../about/about_screen.dart';
 import '../premium/paywall_screen.dart';
 import '../history/history_screen.dart';
 import '../qr_generator/qr_generator.dart';
@@ -18,30 +21,76 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isPremium = false;
+  BannerAd? _bannerAd;
 
   @override
   void initState() {
     super.initState();
     _isPremium = PremiumService.instance.isPremium;
     PremiumService.instance.isPremiumNotifier.addListener(_onPremiumChanged);
+
+    // Load banner if ads are already ready; otherwise wait for them.
+    if (AdService.instance.adsReadyNotifier.value) {
+      _loadBanner();
+    } else {
+      AdService.instance.adsReadyNotifier.addListener(_onAdsReady);
+    }
   }
 
   @override
   void dispose() {
     PremiumService.instance.isPremiumNotifier.removeListener(_onPremiumChanged);
+    AdService.instance.adsReadyNotifier.removeListener(_onAdsReady);
+    _bannerAd?.dispose();
     super.dispose();
   }
 
   void _onPremiumChanged() {
-    if (mounted) {
-      setState(() {
-        _isPremium = PremiumService.instance.isPremium;
-      });
+    if (!mounted) return;
+    setState(() {
+      _isPremium = PremiumService.instance.isPremium;
+    });
+    // Remove banner when user upgrades to premium
+    if (_isPremium) {
+      _bannerAd?.dispose();
+      setState(() => _bannerAd = null);
     }
+  }
+
+  void _onAdsReady() {
+    AdService.instance.adsReadyNotifier.removeListener(_onAdsReady);
+    _loadBanner();
+  }
+
+  void _loadBanner() {
+    if (_isPremium) return;
+
+    final config = AdService.instance.config;
+    if (!config.bannerAdsEnabled || config.bannerAdUnitId.isEmpty) return;
+
+    final ad = BannerAd(
+      adUnitId: config.bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          if (mounted) setState(() {});
+        },
+        onAdFailedToLoad: (failedAd, error) {
+          debugPrint('[HomePage] Banner failed: ${error.message}');
+          failedAd.dispose();
+          if (mounted) setState(() => _bannerAd = null);
+        },
+      ),
+    );
+    _bannerAd = ad;
+    ad.load();
   }
 
   @override
   Widget build(BuildContext context) {
+    final bannerHeight = _bannerAd?.size.height.toDouble() ?? 0;
+
     return Scaffold(
       backgroundColor: kBg,
       body: Stack(
@@ -64,7 +113,7 @@ class _HomePageState extends State<HomePage> {
           ),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 32 + bannerHeight),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -104,6 +153,22 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+          // Banner ad pinned at the bottom above the home indicator
+          if (_bannerAd != null && !_isPremium)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                top: false,
+                child: Container(
+                  height: bannerHeight,
+                  color: kBg,
+                  alignment: Alignment.center,
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -131,8 +196,11 @@ class _HomePageState extends State<HomePage> {
         ),
         const Spacer(),
         IconButton(
-          icon: const Icon(Icons.settings_outlined, color: kText2),
-          onPressed: () {},
+          icon: const Icon(Icons.info_outline_rounded, color: kText2),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AboutScreen()),
+          ),
         ),
       ],
     );

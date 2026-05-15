@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/app_theme.dart';
 import '../../../models/qr_history_item.dart';
+import '../../../services/ad_service.dart';
 import '../../../services/qr_history_service.dart';
 import '../models/qr_generator_data.dart';
 import '../widgets/qr_customization_panel.dart';
@@ -322,6 +323,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
         description: _getQRCodeDescription(),
       );
       await _historyService.insertQRHistory(historyItem);
+      AdService.instance.recordAction();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('QR Code saved to history')),
