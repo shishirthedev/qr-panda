@@ -38,16 +38,14 @@ class PremiumService {
       return;
     }
 
+    // null or false → restore to catch cross-device purchases
     if (stored == false) {
       isPremiumNotifier.value = false;
-      _listenToPurchaseStream();
-      return;
     }
 
     // Fetch product details (price) regardless of premium state
     fetchProductDetails();
 
-    // null → first launch: listen first, then restore
     _listenToPurchaseStream();
     await _restore();
   }
