@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_theme.dart';
-import '../../services/ad_service.dart';
 import '../../services/premium_service.dart';
 
 
@@ -308,43 +307,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         ),
 
                         const SizedBox(height: 12),
-
-                        // Watch rewarded ad for 24h ad-free
-                        if (!isPurchasing &&
-                            AdService.instance.config.rewardedAdsEnabled)
-                          TextButton(
-                            onPressed: () {
-                              AdService.instance.showRewarded(
-                                context,
-                                onRewarded: () {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Ads removed for 24 hours!',
-                                          style: GoogleFonts.inter(color: kText),
-                                        ),
-                                        backgroundColor: kSurface2,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                    );
-                                    Navigator.of(context).pop();
-                                  }
-                                },
-                              );
-                            },
-                            child: Text(
-                              'Watch a short video instead',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: kText2,
-                              ),
-                            ),
-                          ),
 
                         // Restore link
                         TextButton(
