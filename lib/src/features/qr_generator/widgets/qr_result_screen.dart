@@ -404,9 +404,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
       await file.writeAsBytes(pngBytes);
       await SharePlus.instance.share(
         ShareParams(
-          text: 'Check out this QR code!\n\nContent: ${_qrData.qrContent}',
-          subject: 'QR Code from QR Panda',
-          files: [XFile(file.path)],
+          files: [XFile(file.path, mimeType: 'image/png', name: 'qr_panda.png')],
         ),
       );
       AdService.instance.recordAction();
