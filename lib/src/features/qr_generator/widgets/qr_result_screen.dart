@@ -1,7 +1,14 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../core/app_theme.dart';
 import '../../../models/qr_history_item.dart';
 import '../../../services/ad_service.dart';
@@ -210,31 +217,47 @@ class _QRResultScreenState extends State<QRResultScreen> {
 
                         const SizedBox(height: 20),
 
-                        // 3 action buttons
-                        Row(
+                        // Action buttons (2×2 grid)
+                        Column(
                           children: [
-                            Expanded(
-                              child: _actionButton(
-                                icon: Icons.save_outlined,
-                                label: 'Save',
-                                onTap: _saveQRCode,
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _actionButton(
+                                    icon: Icons.save_outlined,
+                                    label: 'Save',
+                                    onTap: _saveQRCode,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _actionButton(
+                                    icon: Icons.download_outlined,
+                                    label: 'Download',
+                                    onTap: _downloadQRCode,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _actionButton(
-                                icon: Icons.share_outlined,
-                                label: 'Share',
-                                onTap: _shareQRCode,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _actionButton(
-                                icon: Icons.edit_outlined,
-                                label: 'Edit',
-                                onTap: () => Navigator.of(context).pop(),
-                              ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _actionButton(
+                                    icon: Icons.share_outlined,
+                                    label: 'Share',
+                                    onTap: _shareQRCode,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _actionButton(
+                                    icon: Icons.edit_outlined,
+                                    label: 'Edit',
+                                    onTap: () => Navigator.of(context).pop(),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -338,10 +361,54 @@ class _QRResultScreenState extends State<QRResultScreen> {
     }
   }
 
+  Future<void> _downloadQRCode() async {
+    try {
+      final boundary = _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+      final result = await ImageGallerySaver.saveImage(
+        pngBytes,
+        quality: 100,
+        name: 'qr_panda_${DateTime.now().millisecondsSinceEpoch}',
+      );
+      if (mounted) {
+        final success = result['isSuccess'] == true || result['filePath'] != null;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success ? 'QR code saved to gallery' : 'Failed to save image'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to download: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _shareQRCode() async {
     try {
-      final shareText = 'Check out this QR code!\n\nContent: ${_qrData.qrContent}';
-      await Share.share(shareText, subject: 'QR Code from QR Panda');
+      final boundary = _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
+      final pngBytes = byteData.buffer.asUint8List();
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/qr_panda_share.png');
+      await file.writeAsBytes(pngBytes);
+      await SharePlus.instance.share(
+        ShareParams(
+          text: 'Check out this QR code!\n\nContent: ${_qrData.qrContent}',
+          subject: 'QR Code from QR Panda',
+          files: [XFile(file.path)],
+        ),
+      );
       AdService.instance.recordAction();
     } catch (e) {
       if (mounted) {
